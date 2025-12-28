@@ -4,6 +4,8 @@ export interface ProductionRecord {
   field: string;
   amount: number; // in MCF (Million Cubic Feet)
   date: string;
+  officers: number;
+  employees: number;
 }
 
 export interface FieldInfo {

@@ -4,7 +4,7 @@ import { FIELDS } from '../constants';
 import { ProductionRecord } from '../types';
 import { 
   PlusCircle, Trash2, Database, AlertCircle, Loader2, XCircle, 
-  Edit3, ChevronLeft, ChevronRight, Save, X
+  Edit3, ChevronLeft, ChevronRight, Save, X, Users, Briefcase
 } from 'lucide-react';
 
 interface Props {
@@ -21,6 +21,8 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
   const [field, setField] = useState(FIELDS[0].name);
   const [amount, setAmount] = useState<string>('');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [officers, setOfficers] = useState<string>('');
+  const [employees, setEmployees] = useState<string>('');
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // UI State
@@ -46,12 +48,20 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
     setValidationError(null);
 
     const numAmount = Number(amount);
+    const numOfficers = Number(officers || 0);
+    const numEmployees = Number(employees || 0);
+
     if (!amount || isNaN(numAmount)) {
       setValidationError("Please enter a valid numeric amount.");
       return;
     }
 
-    // Duplicate Validation: Check if a record for this field and date already exists (excluding the one being edited)
+    if (isNaN(numOfficers) || isNaN(numEmployees)) {
+      setValidationError("Officer and Employee counts must be numbers.");
+      return;
+    }
+
+    // Duplicate Validation
     const isDuplicate = data.some(
       (record) => record.field === field && record.date === date && record.id !== editingId
     );
@@ -63,14 +73,23 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
 
     setIsSubmitting(true);
     try {
+      const payload = { 
+        field, 
+        amount: numAmount, 
+        date, 
+        officers: numOfficers, 
+        employees: numEmployees 
+      };
+
       if (editingId) {
-        await onUpdate(editingId, { field, amount: numAmount, date });
+        await onUpdate(editingId, payload);
         setEditingId(null);
       } else {
-        await onAdd({ field, amount: numAmount, date });
+        await onAdd(payload);
       }
       setAmount('');
-      // Reset form to default date after success if adding
+      setOfficers('');
+      setEmployees('');
       if (!editingId) setDate(new Date().toISOString().split('T')[0]);
     } catch (err) {
       setValidationError("An error occurred while saving. Please check your connection.");
@@ -83,6 +102,8 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
     setField(record.field);
     setAmount(record.amount.toString());
     setDate(record.date);
+    setOfficers((record.officers || 0).toString());
+    setEmployees((record.employees || 0).toString());
     setEditingId(record.id);
     setValidationError(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -91,6 +112,8 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
   const cancelEdit = () => {
     setEditingId(null);
     setAmount('');
+    setOfficers('');
+    setEmployees('');
     setField(FIELDS[0].name);
     setDate(new Date().toISOString().split('T')[0]);
     setValidationError(null);
@@ -101,7 +124,6 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
     setDeletingId(id);
     try {
       await onDelete(id);
-      // Adjust page if we deleted the last item on a page
       if (currentRecords.length === 1 && currentPage > 1) {
         setCurrentPage(prev => prev - 1);
       }
@@ -116,14 +138,14 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
       <div className="lg:col-span-1">
         <div className={`bg-slate-800 p-8 rounded-2xl shadow-xl border transition-all duration-300 ${editingId ? 'border-amber-500/50 ring-1 ring-amber-500/20' : 'border-slate-700'}`}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
+            <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
               {editingId ? (
                 <>
                   <Edit3 className="text-amber-500" /> Edit Record
                 </>
               ) : (
                 <>
-                  <Database className="text-blue-500" /> Cloud Write
+                  <Database className="text-blue-500" /> Data Entry
                 </>
               )}
             </h2>
@@ -159,33 +181,59 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
                 {FIELDS.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Production Amount (MCF)</label>
-              <input 
-                type="number"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  setValidationError(null);
-                }}
-                placeholder="e.g. 500"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
-                required
-              />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Production (MCF)</label>
+                <input 
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Date</label>
+                <input 
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Production Date</label>
-              <input 
-                type="date"
-                value={date}
-                onChange={(e) => {
-                  setDate(e.target.value);
-                  setValidationError(null);
-                }}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none"
-                required
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Officer Count</label>
+                <div className="relative">
+                  <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input 
+                    type="number"
+                    value={officers}
+                    onChange={(e) => setOfficers(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Employee Count</label>
+                <div className="relative">
+                  <Users size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input 
+                    type="number"
+                    value={employees}
+                    onChange={(e) => setEmployees(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none font-mono"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
             </div>
+
             <div className="flex flex-col gap-3">
               <button 
                 type="submit"
@@ -226,7 +274,7 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
         <div className="bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-700 h-full flex flex-col min-h-[600px]">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold">PostgreSQL Archive</h2>
+              <h2 className="text-2xl font-bold text-white">Production & Personnel Archive</h2>
               <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
                 Displaying {currentRecords.length} of {data.length} Total Records
               </p>
@@ -242,7 +290,7 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
             {currentRecords.map(record => (
               <div 
                 key={record.id} 
-                className={`flex items-center justify-between p-4 bg-slate-900 rounded-xl border group transition-all duration-200 ${
+                className={`flex flex-col md:flex-row md:items-center justify-between p-5 bg-slate-900 rounded-xl border group transition-all duration-200 ${
                   editingId === record.id 
                     ? 'border-amber-500/50 bg-amber-500/5 shadow-lg shadow-amber-900/10' 
                     : 'border-slate-700/50 hover:border-blue-500/30'
@@ -250,7 +298,7 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <div className={`font-bold ${editingId === record.id ? 'text-amber-400' : 'text-slate-100'}`}>
+                    <div className={`font-black text-lg ${editingId === record.id ? 'text-amber-400' : 'text-slate-100'}`}>
                       {record.field}
                     </div>
                     {editingId === record.id && (
@@ -259,14 +307,15 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-slate-400 flex items-center gap-3 mt-0.5">
-                    <span className="flex items-center gap-1"><ChevronRight size={12} className="text-slate-600" /> {record.date}</span>
-                    <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                  <div className="text-sm text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                    <span className="flex items-center gap-1 font-bold"><ChevronRight size={12} className="text-slate-600" /> {record.date}</span>
                     <span className="text-emerald-400 font-mono font-bold">{record.amount.toLocaleString()} MCF</span>
+                    <span className="flex items-center gap-1.5 text-amber-500/80"><Briefcase size={14} /> {record.officers} Officers</span>
+                    <span className="flex items-center gap-1.5 text-emerald-500/80"><Users size={14} /> {record.employees} Employees</span>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-4 md:mt-0">
                   <button 
                     onClick={() => startEdit(record)}
                     disabled={isSubmitting}
@@ -311,12 +360,12 @@ const AdminPanel: React.FC<Props> = ({ data, onAdd, onUpdate, onDelete }) => {
                 <ChevronLeft size={16} /> Previous
               </button>
               
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 sm:pb-0">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-lg border font-bold text-sm transition-all ${
+                    className={`min-w-[40px] h-10 rounded-lg border font-bold text-sm transition-all ${
                       currentPage === page 
                         ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20 scale-110' 
                         : 'bg-slate-900 border-slate-700 text-slate-500 hover:text-slate-300'

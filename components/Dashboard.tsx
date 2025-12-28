@@ -4,7 +4,7 @@ import { ProductionRecord } from '../types';
 import { FieldDistributionChart, HistoricalTrendChart, FieldComparisonBar } from './Charts';
 import ProductionTable from './ProductionTable';
 import { getAIInsights } from '../services/geminiService';
-import { Sparkles, TrendingUp, Activity, Clock, LayoutList, History, Zap } from 'lucide-react';
+import { Sparkles, TrendingUp, Activity, Clock, LayoutList, History, Zap, Users, Briefcase } from 'lucide-react';
 
 interface Props {
   data: ProductionRecord[];
@@ -24,6 +24,16 @@ const Dashboard: React.FC<Props> = ({ data, selectedDate, latestDateInSystem }) 
   
   const totalProduction = useMemo(() => 
     dayRecords.reduce((acc, curr) => acc + curr.amount, 0),
+    [dayRecords]
+  );
+
+  const totalOfficers = useMemo(() => 
+    dayRecords.reduce((acc, curr) => acc + (curr.officers || 0), 0),
+    [dayRecords]
+  );
+
+  const totalEmployees = useMemo(() => 
+    dayRecords.reduce((acc, curr) => acc + (curr.employees || 0), 0),
     [dayRecords]
   );
 
@@ -52,10 +62,10 @@ const Dashboard: React.FC<Props> = ({ data, selectedDate, latestDateInSystem }) 
       </div>
 
       {/* Top Section: Vital Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* 1. Headline Metric */}
-        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center">
+        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center lg:col-span-2">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-blue-500/20 rounded-2xl text-blue-400">
               <Activity size={28} />
@@ -71,35 +81,71 @@ const Dashboard: React.FC<Props> = ({ data, selectedDate, latestDateInSystem }) 
           </div>
         </div>
 
-        {/* 2. Field-wise Update List */}
-        <div className="bg-slate-900/60 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm">
+        {/* 2. Officers Stat */}
+        <div className="bg-slate-800/80 p-6 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-amber-500/20 rounded-2xl text-amber-400">
+              <Briefcase size={24} />
+            </div>
+            <span className="text-slate-400 font-bold uppercase tracking-wider text-xs">Total Officers</span>
+          </div>
+          <div className="text-5xl font-black text-white mb-1 tracking-tighter">
+            {totalOfficers.toLocaleString()}
+          </div>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2 border-t border-slate-700/50 pt-3">
+            Executive Personnel
+          </p>
+        </div>
+
+        {/* 3. Employees Stat */}
+        <div className="bg-slate-800/80 p-6 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400">
+              <Users size={24} />
+            </div>
+            <span className="text-slate-400 font-bold uppercase tracking-wider text-xs">Total Employees</span>
+          </div>
+          <div className="text-5xl font-black text-white mb-1 tracking-tighter">
+            {totalEmployees.toLocaleString()}
+          </div>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2 border-t border-slate-700/50 pt-3">
+            Field Workforce
+          </p>
+        </div>
+      </div>
+
+      {/* Middle Grid: Breakdowns & Share */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Field-wise Update List */}
+        <div className="bg-slate-900/60 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm lg:col-span-2">
           <div className="flex items-center gap-3 mb-6">
             <LayoutList size={24} className="text-emerald-500" />
             <h3 className="text-lg font-black text-white uppercase tracking-widest">Field Breakdowns</h3>
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dayRecords.map((record) => (
-              <div key={record.field} className="flex items-center justify-between group border-b border-slate-800 pb-2">
-                <div className="text-slate-400 font-bold text-base group-hover:text-white transition-colors">{record.field}</div>
-                <div className="text-right">
-                  <span className="text-emerald-400 font-black text-xl font-mono">
-                    {record.amount}
-                  </span>
-                  <span className="ml-2 text-[10px] text-slate-600 font-bold uppercase">MCF</span>
+              <div key={record.field} className="p-4 bg-slate-800/40 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all group">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-slate-100 font-black text-lg uppercase tracking-tight">{record.field}</div>
+                  <div className="text-emerald-400 font-black text-xl font-mono">{record.amount} <span className="text-[10px] text-slate-600">MCF</span></div>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-slate-500 border-t border-slate-800 pt-3">
+                  <span className="flex items-center gap-1.5"><Briefcase size={12} className="text-amber-500" /> {record.officers} Off.</span>
+                  <span className="flex items-center gap-1.5"><Users size={12} className="text-emerald-500" /> {record.employees} Emp.</span>
                 </div>
               </div>
             ))}
-            {dayRecords.length === 0 && (
-              <div className="text-slate-500 italic text-center py-12">
-                <p className="text-lg font-bold">No Data Logged</p>
-                <p className="text-xs uppercase tracking-widest mt-2">Zero records for this timestamp</p>
-              </div>
-            )}
           </div>
+          {dayRecords.length === 0 && (
+            <div className="text-slate-500 italic text-center py-12">
+              <p className="text-lg font-bold">No Data Logged</p>
+              <p className="text-xs uppercase tracking-widest mt-2">Zero records for this timestamp</p>
+            </div>
+          )}
         </div>
 
-        {/* 3. Field Distribution Pie Chart */}
-        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center">
+        {/* Field Distribution Pie Chart */}
+        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center h-full">
           <FieldDistributionChart data={data} targetDate={selectedDate} />
         </div>
       </div>
@@ -139,7 +185,7 @@ const Dashboard: React.FC<Props> = ({ data, selectedDate, latestDateInSystem }) 
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              Temporal Processing
+              Personnel & Resource Optimized
             </div>
           </div>
         </div>
