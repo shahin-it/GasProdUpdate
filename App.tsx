@@ -145,7 +145,7 @@ const App: React.FC = () => {
           <div className="bg-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-900/30"><Fuel className="text-white" size={28} /></div>
           <div className="hidden sm:block">
             <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">GasPro <span className="text-emerald-500">Analytics</span></h1>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{dbStatus === 'online' ? 'PostgreSQL Active' : 'Offline Mode'}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}</p>
           </div>
         </div>
         <nav className="flex items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700/50 shadow-inner">

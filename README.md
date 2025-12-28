@@ -1,20 +1,49 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# GasPro Analytics - Supabase Setup Guide
 
-This contains everything you need to run your app locally.
+This application is a TV-optimized dashboard for monitoring gas production. It is configured to talk to **Supabase** for real-time data and persistent storage.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1zL7IfnUev1r1MDs7LpGpAai1J2gzvCFq
+## 1. Prerequisites
+- **Google Gemini API Key**: Get one at [Google AI Studio](https://aistudio.google.com/).
+- **Supabase Account**: Create a project at [supabase.com](https://supabase.com).
 
-## Run Locally
+## 2. Database Configuration
+Run the following SQL in your Supabase **SQL Editor** to create the necessary tables:
 
-**Prerequisites:**  Node.js
+```sql
+-- Production Records Table
+CREATE TABLE IF NOT EXISTS production_records (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  field TEXT NOT NULL,
+  amount NUMERIC NOT NULL,
+  date DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
+-- Personnel Records Table
+CREATE TABLE IF NOT EXISTS personnel_records (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  date DATE UNIQUE NOT NULL,
+  officers INTEGER NOT NULL,
+  employees INTEGER NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+-- Indices
+CREATE INDEX IF NOT EXISTS idx_prod_date ON production_records(date);
+CREATE INDEX IF NOT EXISTS idx_pers_date ON personnel_records(date);
+```
+
+## 3. Environment Variables
+Configure your environment with:
+
+- `API_KEY`: Your Google Gemini API Key.
+- `SUPABASE_URL`: Your Supabase Project URL.
+- `SUPABASE_ANON_KEY`: Your Supabase Anonymous API Key.
+
+## 4. Local Development
+1. Install Vite: `npm install -g vite`
+2. Create a `.env` file with your keys.
+3. Run `npx vite`.
+
+*If the Supabase keys are not provided, the app defaults to **Mock Mode** using LocalStorage.*
