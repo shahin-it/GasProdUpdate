@@ -8,7 +8,7 @@ import { dbService } from './services/dbService.ts';
 import { 
   Monitor, Settings, LayoutDashboard, Database, Fuel, 
   Lock, ChevronLeft, ChevronRight, 
-  Calendar, Server, AlertTriangle, Clock, RefreshCw
+  Calendar, Server, AlertTriangle, Clock, RefreshCw, Wifi
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'mock'>('mock');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isSyncing, setIsSyncing] = useState(false);
   const isInitialLoad = useRef(true);
 
   // Derived unique sorted dates from both datasets
@@ -49,8 +50,8 @@ const App: React.FC = () => {
         dbService.getRecords(),
         dbService.getPersonnelRecords()
       ]);
-      setProductionData(records.length ? records : INITIAL_MOCK_DATA);
-      setPersonnelData(personnel.length ? personnel : INITIAL_PERSONNEL_DATA);
+      setProductionData(records);
+      setPersonnelData(personnel);
       setDbStatus('online');
       setLastUpdated(new Date());
     } catch (err) {
@@ -58,6 +59,40 @@ const App: React.FC = () => {
       setDbStatus('offline');
     }
   };
+
+  // Setup Real-time Subscriptions
+  useEffect(() => {
+    if (dbStatus !== 'online') return;
+
+    const channel = dbService.subscribeToChanges((payload) => {
+      setIsSyncing(true);
+      const { type, eventType, new: newRecord, old: oldRecord } = payload;
+
+      if (type === 'production') {
+        setProductionData(prev => {
+          if (eventType === 'INSERT') return [newRecord, ...prev];
+          if (eventType === 'UPDATE') return prev.map(r => r.id === newRecord.id ? newRecord : r);
+          if (eventType === 'DELETE') return prev.filter(r => r.id !== oldRecord.id);
+          return prev;
+        });
+      } else if (type === 'personnel') {
+        setPersonnelData(prev => {
+          if (eventType === 'INSERT') return [newRecord, ...prev];
+          if (eventType === 'UPDATE') return prev.map(r => r.id === newRecord.id ? newRecord : r);
+          if (eventType === 'DELETE') return prev.filter(r => r.id !== oldRecord.id);
+          return prev;
+        });
+      }
+
+      setLastUpdated(new Date());
+      // Reset syncing animation after a brief moment
+      setTimeout(() => setIsSyncing(false), 1500);
+    });
+
+    return () => {
+      if (channel) channel.unsubscribe();
+    };
+  }, [dbStatus]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -93,47 +128,54 @@ const App: React.FC = () => {
     }
   }, [productionData, personnelData, dbStatus]);
 
-  // Handlers with automatic state refresh
+  // Handlers
   const handleAddProduction = async (record: Omit<ProductionRecord, 'id'>) => {
     if (dbStatus === 'online') {
-      const newRecord = await dbService.addRecord(record);
-      if (newRecord) { setProductionData(prev => [newRecord, ...prev]); return; }
+      await dbService.addRecord(record);
+      // State is handled by real-time subscription
+    } else {
+      setProductionData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
     }
-    setProductionData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
   };
 
   const handleUpdateProduction = async (id: string, record: Omit<ProductionRecord, 'id'>) => {
     if (dbStatus === 'online') {
-      const updated = await dbService.updateRecord(id, record);
-      if (updated) { setProductionData(prev => prev.map(r => r.id === id ? updated : r)); return; }
+      await dbService.updateRecord(id, record);
+    } else {
+      setProductionData(prev => prev.map(r => r.id === id ? { ...record, id } : r));
     }
-    setProductionData(prev => prev.map(r => r.id === id ? { ...record, id } : r));
   };
 
   const handleDeleteProduction = async (id: string) => {
-    if (dbStatus === 'online' && await dbService.deleteRecord(id)) { setProductionData(prev => prev.filter(r => r.id !== id)); return; }
-    setProductionData(prev => prev.filter(r => r.id !== id));
+    if (dbStatus === 'online') {
+      await dbService.deleteRecord(id);
+    } else {
+      setProductionData(prev => prev.filter(r => r.id !== id));
+    }
   };
 
   const handleAddPersonnel = async (record: Omit<PersonnelRecord, 'id'>) => {
     if (dbStatus === 'online') {
-      const newRecord = await dbService.addPersonnelRecord(record);
-      if (newRecord) { setPersonnelData(prev => [newRecord, ...prev]); return; }
+      await dbService.addPersonnelRecord(record);
+    } else {
+      setPersonnelData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
     }
-    setPersonnelData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
   };
 
   const handleUpdatePersonnel = async (id: string, record: Omit<PersonnelRecord, 'id'>) => {
     if (dbStatus === 'online') {
-      const updated = await dbService.updatePersonnelRecord(id, record);
-      if (updated) { setPersonnelData(prev => prev.map(r => r.id === id ? updated : r)); return; }
+      await dbService.updatePersonnelRecord(id, record);
+    } else {
+      setPersonnelData(prev => prev.map(r => r.id === id ? { ...record, id } : r));
     }
-    setPersonnelData(prev => prev.map(r => r.id === id ? { ...record, id } : r));
   };
 
   const handleDeletePersonnel = async (id: string) => {
-    if (dbStatus === 'online' && await dbService.deletePersonnelRecord(id)) { setPersonnelData(prev => prev.filter(r => r.id !== id)); return; }
-    setPersonnelData(prev => prev.filter(r => r.id !== id));
+    if (dbStatus === 'online') {
+      await dbService.deletePersonnelRecord(id);
+    } else {
+      setPersonnelData(prev => prev.filter(r => r.id !== id));
+    }
   };
 
   return (
@@ -144,10 +186,12 @@ const App: React.FC = () => {
           <div className="hidden sm:block">
             <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">GasPro <span className="text-emerald-500">Analytics</span></h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}</p>
-              <div className="w-1 h-1 rounded-full bg-slate-700"></div>
+              <p className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${isSyncing ? 'text-emerald-400' : 'text-slate-500'}`}>
+                {dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}
+              </p>
+              <div className={`w-1 h-1 rounded-full transition-colors duration-500 ${isSyncing ? 'bg-emerald-400 animate-ping' : 'bg-slate-700'}`}></div>
               <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center gap-1">
-                <RefreshCw size={10} className="animate-spin-slow" /> Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <RefreshCw size={10} className={`${isSyncing ? 'animate-spin' : 'animate-spin-slow'}`} /> Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </p>
             </div>
           </div>
@@ -200,7 +244,9 @@ const App: React.FC = () => {
         </nav>
         <div className="hidden lg:flex items-center gap-4">
            {dbStatus === 'online' ? (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 text-[10px] font-black uppercase"><Server size={10} /> Cloud Link</div>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 text-[10px] font-black uppercase">
+                <Wifi size={10} className="animate-pulse" /> Live Syncing
+              </div>
            ) : (
               <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/20 text-[10px] font-black uppercase"><AlertTriangle size={10} /> Local Cache</div>
            )}

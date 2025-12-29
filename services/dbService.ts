@@ -1,5 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, RealtimeChannel } from '@supabase/supabase-js';
 import { ProductionRecord, PersonnelRecord } from '../types.ts';
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
@@ -10,6 +10,27 @@ const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supa
 export const dbService = {
   isConfigured(): boolean {
     return !!supabase;
+  },
+
+  // Real-time Subscriptions
+  subscribeToChanges(callback: (payload: any) => void): RealtimeChannel | null {
+    if (!supabase) return null;
+
+    const channel = supabase
+      .channel('db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'production_records' },
+        (payload) => callback({ type: 'production', ...payload })
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'personnel_records' },
+        (payload) => callback({ type: 'personnel', ...payload })
+      )
+      .subscribe();
+
+    return channel;
   },
 
   // Production Records
