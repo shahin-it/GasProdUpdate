@@ -1,8 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { FIELDS } from '../constants';
-import { ProductionRecord, PersonnelRecord } from '../types';
-// Fix: Added Fuel and Calendar to the imports from lucide-react to resolve "Cannot find name" errors.
+import { FIELDS } from '../constants.ts';
+import { ProductionRecord, PersonnelRecord } from '../types.ts';
 import { 
   PlusCircle, Trash2, Database, AlertCircle, Loader2, XCircle, 
   Edit3, ChevronLeft, ChevronRight, Save, X, Users, Briefcase, LayoutGrid, UserCheck,

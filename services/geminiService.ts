@@ -1,12 +1,14 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { ProductionRecord } from "../types";
+import { ProductionRecord } from "../types.ts";
 
 export const getAIInsights = async (data: ProductionRecord[], targetDate: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   // Provide specific data for the target date and a small historical context
   const targetDayData = data.filter(r => r.date === targetDate);
+  if (targetDayData.length === 0) return "No operational logs found for this date.";
+
   const dataSummary = targetDayData.map(r => `${r.field}: ${r.amount} MCF`).join('\n');
   
   const prompt = `

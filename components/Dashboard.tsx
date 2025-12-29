@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ProductionRecord, PersonnelRecord } from '../types';
-import { FieldDistributionChart, HistoricalTrendChart, FieldComparisonBar } from './Charts';
-import ProductionTable from './ProductionTable';
-import { getAIInsights } from '../services/geminiService';
+import { ProductionRecord, PersonnelRecord } from '../types.ts';
+import { FieldDistributionChart, HistoricalTrendChart, FieldComparisonBar } from './Charts.tsx';
+import ProductionTable from './ProductionTable.tsx';
+import { getAIInsights } from '../services/geminiService.ts';
 import { Sparkles, TrendingUp, Activity, Clock, LayoutList, History, Zap, Users, Briefcase } from 'lucide-react';
 
 interface Props {
@@ -25,11 +25,20 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
 
   useEffect(() => {
     const fetchInsights = async () => {
-      if (dayRecords.length === 0) return;
+      if (dayRecords.length === 0) {
+        setInsights("No data available for AI analysis on this date.");
+        setLoadingInsights(false);
+        return;
+      }
       setLoadingInsights(true);
-      const text = await getAIInsights(productionData, selectedDate);
-      setInsights(text);
-      setLoadingInsights(false);
+      try {
+        const text = await getAIInsights(productionData, selectedDate);
+        setInsights(text);
+      } catch (e) {
+        setInsights("AI Insights currently unavailable.");
+      } finally {
+        setLoadingInsights(false);
+      }
     };
     fetchInsights();
   }, [selectedDate, productionData]);

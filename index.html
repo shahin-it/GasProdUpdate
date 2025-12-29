@@ -30,6 +30,10 @@
       background: #475569;
     }
   </style>
+  <script>
+    // Shim for process.env to prevent crashes in native ESM
+    window.process = window.process || { env: {} };
+  </script>
 <script type="importmap">
 {
   "imports": {
@@ -39,6 +43,7 @@
     "recharts": "https://esm.sh/recharts@^3.6.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
   }
 }
@@ -46,5 +51,6 @@
 </head>
 <body>
   <div id="root"></div>
+  <script type="module" src="index.tsx"></script>
 </body>
 </html>

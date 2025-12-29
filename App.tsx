@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { ProductionRecord, PersonnelRecord, ViewType } from './types';
-import { INITIAL_MOCK_DATA, INITIAL_PERSONNEL_DATA, ALLOWED_ADMIN_IPS } from './constants';
-import Dashboard from './components/Dashboard';
-import AdminPanel from './components/AdminPanel';
-import { dbService } from './services/dbService';
+import { ProductionRecord, PersonnelRecord, ViewType } from './types.ts';
+import { INITIAL_MOCK_DATA, INITIAL_PERSONNEL_DATA, ALLOWED_ADMIN_IPS } from './constants.ts';
+import Dashboard from './components/Dashboard.tsx';
+import AdminPanel from './components/AdminPanel.tsx';
+import { dbService } from './services/dbService.ts';
 import { 
   Monitor, Settings, LayoutDashboard, Database, Fuel, 
   Lock, ChevronLeft, ChevronRight, 
@@ -57,6 +57,7 @@ const App: React.FC = () => {
         setPersonnelData(personnel.length ? personnel : INITIAL_PERSONNEL_DATA);
         setDbStatus('online');
       } catch (err) {
+        console.error("Initialization error:", err);
         setDbStatus('offline');
         const savedProd = localStorage.getItem('gaspro_production_data');
         const savedPers = localStorage.getItem('gaspro_personnel_data');

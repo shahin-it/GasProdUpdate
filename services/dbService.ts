@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { ProductionRecord, PersonnelRecord } from '../types';
+import { ProductionRecord, PersonnelRecord } from '../types.ts';
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
