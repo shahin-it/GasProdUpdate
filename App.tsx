@@ -8,7 +8,7 @@ import { dbService } from './services/dbService.ts';
 import { 
   Monitor, Settings, LayoutDashboard, Database, Fuel, 
   Lock, ChevronLeft, ChevronRight, 
-  Calendar, Server, AlertTriangle, Clock
+  Calendar, Server, AlertTriangle, Clock, RefreshCw
 } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -18,57 +18,52 @@ const App: React.FC = () => {
   const [isAdminAllowed, setIsAdminAllowed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'mock'>('mock');
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const isInitialLoad = useRef(true);
 
   // Derived unique sorted dates from both datasets
   const availableDates = useMemo(() => {
     const dates = new Set<string>();
     productionData.forEach(r => dates.add(r.date));
-    personnelData.forEach(r => dates.add(r.date));
     return Array.from(dates).sort();
-  }, [productionData, personnelData]);
+  }, [productionData]);
   
   const latestDateInSystem = useMemo(() => 
     availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0],
     [availableDates]
   );
 
-  // Initializing with a temporary value; the useEffect will sync it to latest once data loads
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    const initializeData = async () => {
-      setIsLoading(true);
-      if (!dbService.isConfigured()) {
-        const savedProd = localStorage.getItem('gaspro_production_data');
-        const savedPers = localStorage.getItem('gaspro_personnel_data');
-        setProductionData(savedProd ? JSON.parse(savedProd) : INITIAL_MOCK_DATA);
-        setPersonnelData(savedPers ? JSON.parse(savedPers) : INITIAL_PERSONNEL_DATA);
-        setDbStatus('mock');
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const [records, personnel] = await Promise.all([
-          dbService.getRecords(),
-          dbService.getPersonnelRecords()
-        ]);
-        setProductionData(records.length ? records : INITIAL_MOCK_DATA);
-        setPersonnelData(personnel.length ? personnel : INITIAL_PERSONNEL_DATA);
-        setDbStatus('online');
-      } catch (err) {
-        console.error("Initialization error:", err);
-        setDbStatus('offline');
-        const savedProd = localStorage.getItem('gaspro_production_data');
-        const savedPers = localStorage.getItem('gaspro_personnel_data');
-        setProductionData(savedProd ? JSON.parse(savedProd) : INITIAL_MOCK_DATA);
-        setPersonnelData(savedPers ? JSON.parse(savedPers) : INITIAL_PERSONNEL_DATA);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    if (!dbService.isConfigured()) {
+      const savedProd = localStorage.getItem('gaspro_production_data');
+      const savedPers = localStorage.getItem('gaspro_personnel_data');
+      setProductionData(savedProd ? JSON.parse(savedProd) : INITIAL_MOCK_DATA);
+      setPersonnelData(savedPers ? JSON.parse(savedPers) : INITIAL_PERSONNEL_DATA);
+      setDbStatus('mock');
+      return;
+    }
+    try {
+      const [records, personnel] = await Promise.all([
+        dbService.getRecords(),
+        dbService.getPersonnelRecords()
+      ]);
+      setProductionData(records.length ? records : INITIAL_MOCK_DATA);
+      setPersonnelData(personnel.length ? personnel : INITIAL_PERSONNEL_DATA);
+      setDbStatus('online');
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setDbStatus('offline');
+    }
+  };
 
-    const checkIpAccess = async () => {
+  useEffect(() => {
+    const initialize = async () => {
+      setIsLoading(true);
+      await fetchData();
+      
       try {
         const response = await fetch('https://api.ipify.org?format=json');
         const result = await response.json();
@@ -76,13 +71,11 @@ const App: React.FC = () => {
       } catch {
         setIsAdminAllowed(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       }
+      setIsLoading(false);
     };
-
-    initializeData();
-    checkIpAccess();
+    initialize();
   }, []);
 
-  // Sync selected date to the latest available data on first load or when current selected date becomes invalid
   useEffect(() => {
     if (!isLoading && availableDates.length > 0) {
       if (isInitialLoad.current || !availableDates.includes(selectedDate)) {
@@ -96,10 +89,11 @@ const App: React.FC = () => {
     if (dbStatus === 'mock') {
       localStorage.setItem('gaspro_production_data', JSON.stringify(productionData));
       localStorage.setItem('gaspro_personnel_data', JSON.stringify(personnelData));
+      setLastUpdated(new Date());
     }
   }, [productionData, personnelData, dbStatus]);
 
-  // Handlers for Production
+  // Handlers with automatic state refresh
   const handleAddProduction = async (record: Omit<ProductionRecord, 'id'>) => {
     if (dbStatus === 'online') {
       const newRecord = await dbService.addRecord(record);
@@ -107,6 +101,7 @@ const App: React.FC = () => {
     }
     setProductionData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
   };
+
   const handleUpdateProduction = async (id: string, record: Omit<ProductionRecord, 'id'>) => {
     if (dbStatus === 'online') {
       const updated = await dbService.updateRecord(id, record);
@@ -114,12 +109,12 @@ const App: React.FC = () => {
     }
     setProductionData(prev => prev.map(r => r.id === id ? { ...record, id } : r));
   };
+
   const handleDeleteProduction = async (id: string) => {
     if (dbStatus === 'online' && await dbService.deleteRecord(id)) { setProductionData(prev => prev.filter(r => r.id !== id)); return; }
     setProductionData(prev => prev.filter(r => r.id !== id));
   };
 
-  // Handlers for Personnel
   const handleAddPersonnel = async (record: Omit<PersonnelRecord, 'id'>) => {
     if (dbStatus === 'online') {
       const newRecord = await dbService.addPersonnelRecord(record);
@@ -127,6 +122,7 @@ const App: React.FC = () => {
     }
     setPersonnelData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
   };
+
   const handleUpdatePersonnel = async (id: string, record: Omit<PersonnelRecord, 'id'>) => {
     if (dbStatus === 'online') {
       const updated = await dbService.updatePersonnelRecord(id, record);
@@ -134,6 +130,7 @@ const App: React.FC = () => {
     }
     setPersonnelData(prev => prev.map(r => r.id === id ? { ...record, id } : r));
   };
+
   const handleDeletePersonnel = async (id: string) => {
     if (dbStatus === 'online' && await dbService.deletePersonnelRecord(id)) { setPersonnelData(prev => prev.filter(r => r.id !== id)); return; }
     setPersonnelData(prev => prev.filter(r => r.id !== id));
@@ -146,7 +143,13 @@ const App: React.FC = () => {
           <div className="bg-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-900/30"><Fuel className="text-white" size={28} /></div>
           <div className="hidden sm:block">
             <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">GasPro <span className="text-emerald-500">Analytics</span></h1>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}</p>
+              <div className="w-1 h-1 rounded-full bg-slate-700"></div>
+              <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center gap-1">
+                <RefreshCw size={10} className="animate-spin-slow" /> Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
           </div>
         </div>
         <nav className="flex items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700/50 shadow-inner">

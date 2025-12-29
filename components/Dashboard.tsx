@@ -17,8 +17,14 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
   const [insights, setInsights] = useState<string>('Analyzing operational metrics...');
   const [loadingInsights, setLoadingInsights] = useState(true);
 
+  // Production data is tied to date selection
   const dayRecords = useMemo(() => productionData.filter(d => d.date === selectedDate), [productionData, selectedDate]);
-  const dayPersonnel = useMemo(() => personnelData.find(p => p.date === selectedDate), [personnelData, selectedDate]);
+  
+  // Personnel data is GLOBAL (not tied to date selection - shows latest available)
+  const latestPersonnel = useMemo(() => {
+    if (!personnelData.length) return null;
+    return [...personnelData].sort((a, b) => b.date.localeCompare(a.date))[0];
+  }, [personnelData]);
   
   const totalProduction = useMemo(() => dayRecords.reduce((acc, curr) => acc + curr.amount, 0), [dayRecords]);
   const isLatest = selectedDate === latestDateInSystem;
@@ -68,10 +74,11 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Aggregate Production Card */}
         <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center lg:col-span-2">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-blue-500/20 rounded-2xl text-blue-400"><Activity size={28} /></div>
-            <span className="text-slate-400 font-bold uppercase tracking-wider text-sm">Aggregate Field Output</span>
+            <span className="text-slate-400 font-bold uppercase tracking-wider text-sm">Aggregate Field Output ({selectedDate})</span>
           </div>
           <div className="text-7xl font-black text-white mb-2 tracking-tighter">{totalProduction.toLocaleString()}</div>
           <div className="text-xl text-slate-500 font-bold uppercase mb-4">Million Cubic Feet (MCF)</div>
@@ -80,31 +87,37 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </div>
         </div>
 
-        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-between">
+        {/* Personnel Card - Decoupled from Date Slider */}
+        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-between relative overflow-hidden group">
+          <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+            <span className="text-[8px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-black animate-pulse">LATEST STATUS</span>
+            <span className="text-[7px] text-slate-500 font-bold uppercase tracking-tighter italic">Ref: {latestPersonnel?.date || 'N/A'}</span>
+          </div>
+          
           <div>
             <div className="flex items-center gap-3 mb-8">
               <Users size={24} className="text-slate-400" />
-              <h3 className="text-sm font-black text-white uppercase tracking-widest">Company Personnel</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-widest">Company Workforce</h3>
             </div>
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400"><Briefcase size={24} /></div>
+                  <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400 group-hover:scale-110 transition-transform"><Briefcase size={24} /></div>
                   <span className="text-slate-300 font-bold text-lg uppercase">Officers</span>
                 </div>
-                <div className="text-5xl font-black text-white tracking-tighter">{dayPersonnel?.officers.toLocaleString() || "---"}</div>
+                <div className="text-5xl font-black text-white tracking-tighter">{latestPersonnel?.officers.toLocaleString() || "---"}</div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400"><Users size={24} /></div>
+                  <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400 group-hover:scale-110 transition-transform"><Users size={24} /></div>
                   <span className="text-slate-300 font-bold text-lg uppercase">Employees</span>
                 </div>
-                <div className="text-5xl font-black text-white tracking-tighter">{dayPersonnel?.employees.toLocaleString() || "---"}</div>
+                <div className="text-5xl font-black text-white tracking-tighter">{latestPersonnel?.employees.toLocaleString() || "---"}</div>
               </div>
             </div>
           </div>
           <div className="pt-8 border-t border-slate-700/50">
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Corporate Workforce Analytics</p>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Current Personnel Distribution</p>
           </div>
         </div>
       </div>
