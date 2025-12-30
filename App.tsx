@@ -11,6 +11,14 @@ import {
   Calendar, Server, AlertTriangle, Clock, RefreshCw, Wifi
 } from 'lucide-react';
 
+const CompanyLogo = () => (
+  <svg className="w-8 h-8 drop-shadow-lg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 5 C30 5 15 35 15 60 C15 85 30 95 50 95 C70 95 85 85 85 60 C85 35 70 5 50 5 Z" fill="#FBBF24" />
+    <path d="M42 45 L42 85 M42 45 Q55 45 55 55 Q55 65 42 65 M42 65 Q58 65 58 75 Q58 85 42 85" fill="none" stroke="#EF4444" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M65 45 Q50 45 50 65 Q50 85 65 85 L65 75" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" />
+  </svg>
+);
+
 const App: React.FC = () => {
   const [productionData, setProductionData] = useState<ProductionRecord[]>([]);
   const [personnelData, setPersonnelData] = useState<PersonnelRecord[]>([]);
@@ -182,9 +190,11 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#0f172a]">
       <header className="sticky top-0 z-50 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md px-8 py-4 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="bg-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-900/30"><Fuel className="text-white" size={28} /></div>
+          <div className="bg-slate-800 p-1.5 rounded-xl shadow-inner border border-slate-700/50">
+            <CompanyLogo />
+          </div>
           <div className="hidden sm:block">
-            <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">GasPro <span className="text-emerald-500">Analytics</span></h1>
+            <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">BGFCL GasPro <span className="text-emerald-500">Analytics</span></h1>
             <div className="flex items-center gap-2 mt-1">
               <p className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${isSyncing ? 'text-emerald-400' : 'text-slate-500'}`}>
                 {dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}
