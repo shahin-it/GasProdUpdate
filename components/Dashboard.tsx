@@ -4,7 +4,7 @@ import { ProductionRecord, PersonnelRecord } from '../types.ts';
 import { FieldDistributionChart, HistoricalTrendChart, FieldComparisonBar } from './Charts.tsx';
 import ProductionTable from './ProductionTable.tsx';
 import { getAIInsights } from '../services/geminiService.ts';
-import { Sparkles, TrendingUp, Activity, Clock, LayoutList, History, Zap, Users, Briefcase } from 'lucide-react';
+import { Sparkles, TrendingUp, Activity, Clock, LayoutList, History, Zap, Users, Briefcase, BarChart3 } from 'lucide-react';
 
 interface Props {
   productionData: ProductionRecord[];
@@ -28,6 +28,32 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
   
   const totalProduction = useMemo(() => dayRecords.reduce((acc, curr) => acc + curr.amount, 0), [dayRecords]);
   const isLatest = selectedDate === latestDateInSystem;
+
+  // Historical Averages Calculation
+  const historicalMetrics = useMemo(() => {
+    // 1. Group by date and calculate daily totals
+    const dailyTotalsMap: Record<string, number> = {};
+    productionData.forEach(record => {
+      dailyTotalsMap[record.date] = (dailyTotalsMap[record.date] || 0) + record.amount;
+    });
+
+    const sortedDates = Object.keys(dailyTotalsMap).sort();
+    const latestIdx = sortedDates.indexOf(latestDateInSystem);
+
+    if (latestIdx === -1) return { avg7: 0, avg30: 0 };
+
+    // 2. Get 7-day and 30-day windows leading up to the latest date
+    const last7Dates = sortedDates.slice(Math.max(0, latestIdx - 6), latestIdx + 1);
+    const last30Dates = sortedDates.slice(Math.max(0, latestIdx - 29), latestIdx + 1);
+
+    const sum7 = last7Dates.reduce((acc, date) => acc + dailyTotalsMap[date], 0);
+    const sum30 = last30Dates.reduce((acc, date) => acc + dailyTotalsMap[date], 0);
+
+    return {
+      avg7: last7Dates.length ? Math.round(sum7 / last7Dates.length) : 0,
+      avg30: last30Dates.length ? Math.round(sum30 / last30Dates.length) : 0,
+    };
+  }, [productionData, latestDateInSystem]);
 
   useEffect(() => {
     const fetchInsights = async () => {
@@ -75,15 +101,43 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Aggregate Production Card */}
-        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center lg:col-span-2">
+        <div className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center lg:col-span-2 relative overflow-hidden group">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-blue-500/20 rounded-2xl text-blue-400"><Activity size={28} /></div>
             <span className="text-slate-400 font-bold uppercase tracking-wider text-sm">Aggregate Field Output ({selectedDate})</span>
           </div>
-          <div className="text-7xl font-black text-white mb-2 tracking-tighter">{totalProduction.toLocaleString()}</div>
-          <div className="text-xl text-slate-500 font-bold uppercase mb-4">Million Cubic Feet (MCF)</div>
-          <div className={`mt-auto pt-6 border-t border-slate-700/50 text-lg flex items-center gap-2 font-bold ${totalProduction > 1500 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            <TrendingUp size={24} /> {totalProduction > 1500 ? 'PEAK PERFORMANCE' : 'MONITORING TREND'}
+          
+          <div className="flex flex-col md:flex-row md:items-end gap-6 mb-8">
+            <div>
+              <div className="text-8xl font-black text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">{totalProduction.toLocaleString()}</div>
+              <div className="text-xl text-slate-500 font-bold uppercase mt-1">Million Cubic Feet (MCF)</div>
+            </div>
+            
+            {/* Historical Averages Mini Grid */}
+            <div className="flex flex-col gap-3 pb-2 border-l border-slate-700 pl-6 mb-1">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">7-Day Mean</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-blue-400 font-mono">{historicalMetrics.avg7.toLocaleString()}</span>
+                  <BarChart3 size={14} className="text-slate-600" />
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">30-Day Mean</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black text-slate-300 font-mono">{historicalMetrics.avg30.toLocaleString()}</span>
+                  <TrendingUp size={14} className="text-slate-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`mt-auto pt-6 border-t border-slate-700/50 text-lg flex items-center justify-between font-bold`}>
+            <div className={`flex items-center gap-2 ${totalProduction >= historicalMetrics.avg7 ? 'text-emerald-400' : 'text-amber-400'}`}>
+               <TrendingUp size={24} className={totalProduction < historicalMetrics.avg7 ? 'rotate-180' : ''} /> 
+               {totalProduction >= historicalMetrics.avg7 ? 'PERFORMING ABOVE 7D AVG' : 'BELOW 7D OPERATIONAL NORM'}
+            </div>
+            <div className="text-[10px] text-slate-600 uppercase font-black tracking-widest hidden sm:block">Real-time Telemetry Active</div>
           </div>
         </div>
 
