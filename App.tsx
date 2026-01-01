@@ -12,11 +12,12 @@ import {
 } from 'lucide-react';
 
 const CompanyLogo = () => (
-  <svg className="w-6 h-6 md:w-8 md:h-8 drop-shadow-lg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <path d="M50 5 C30 5 15 35 15 60 C15 85 30 95 50 95 C70 95 85 85 85 60 C85 35 70 5 50 5 Z" fill="#FBBF24" />
-    <path d="M42 45 L42 85 M42 45 Q55 45 55 55 Q55 65 42 65 M42 65 Q58 65 58 75 Q58 85 42 85" fill="none" stroke="#EF4444" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M65 45 Q50 45 50 65 Q50 85 65 85 L65 75" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" />
-  </svg>
+  <img 
+    src="logo.png" 
+    alt="BGFCL Official Logo" 
+    className="h-8 md:h-12 w-auto block object-contain"
+    style={{ display: 'block' }}
+  />
 );
 
 const App: React.FC = () => {
@@ -199,7 +200,7 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 backdrop-blur-md px-4 md:px-8 py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm dark:shadow-2xl">
         <div className="flex items-center justify-between w-full sm:w-auto gap-4">
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="bg-slate-100 dark:bg-slate-800 p-1 md:p-1.5 rounded-lg md:rounded-xl shadow-inner border border-slate-200 dark:border-slate-700/50">
+            <div className="bg-[#004b49] p-0 md:p-1 rounded-lg md:rounded-xl shadow-lg border border-[#003a38] overflow-hidden flex items-center justify-center">
               <CompanyLogo />
             </div>
             <div>
