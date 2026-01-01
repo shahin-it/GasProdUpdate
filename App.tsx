@@ -13,7 +13,7 @@ import {
 
 const CompanyLogo = () => (
   <img 
-    src="logo.png" 
+    src="asset/logo.png" 
     alt="BGFCL Official Logo" 
     className="h-8 md:h-12 w-auto block object-contain"
     style={{ display: 'block' }}
