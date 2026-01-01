@@ -169,7 +169,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
         <div className="bg-white dark:bg-slate-900/60 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm lg:col-span-2">
           <div className="flex items-center gap-3 mb-6">
             <LayoutList size={20} className="text-emerald-500 md:size-6" />
-            <h3 className="text-sm md:text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest">Field Logs Breakdown</h3>
+            <h3 className="text-sm md:text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest">Production Breakdown</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {dayRecords.map((record) => (
