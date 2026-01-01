@@ -184,8 +184,7 @@ const AdminPanel: React.FC<Props> = ({
                 </div>
               ))
             )}
-            {/* Fixed the invalid 'md:size' prop by using responsive Tailwind classes for width and height */}
-            {pagedData.length === 0 && <div className="text-center py-24 md:py-40 text-slate-400 dark:text-slate-600 flex flex-col items-center gap-4"><AlertCircle size={32} className="opacity-10 md:w-12 md:h-12" /><p className="font-black uppercase tracking-widest text-xs md:text-sm">Empty State</p></div>}
+            {pagedData.length === 0 && <div className="text-center py-24 md:py-40 text-slate-400 dark:text-slate-600 flex flex-col items-center gap-4"><AlertCircle size={32} className="opacity-10 md:w-16 md:h-16" /><p className="font-black uppercase tracking-widest text-xs md:text-sm">Empty State</p></div>}
           </div>
 
           {totalPages > 1 && (

@@ -76,7 +76,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
       <div className={`flex items-center gap-3 md:gap-4 px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-3xl border shadow-sm transition-all ${!isLatest ? 'bg-amber-500/5 border-amber-500/20 text-amber-600 dark:text-amber-500' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-500'}`}>
         {!isLatest ? (
           <>
-            <History size={20} className="md:size-6" />
+            <History size={20} className="md:w-6 md:h-6" />
             <div className="flex flex-col">
               <span className="font-black uppercase tracking-widest text-[10px] md:text-sm">Historical Archive View</span>
               <span className="text-[8px] md:text-[10px] opacity-70 font-bold uppercase">{selectedDate} Records</span>
@@ -84,7 +84,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </>
         ) : (
           <>
-            <Zap size={20} className="md:size-6 animate-pulse" />
+            <Zap size={20} className="md:w-6 md:h-6 animate-pulse" />
             <div className="flex flex-col">
               <span className="font-black uppercase tracking-widest text-[10px] md:text-sm">Live Operational Status</span>
               <span className="text-[8px] md:text-[10px] opacity-70 font-bold uppercase">Streaming Latest Logs</span>
@@ -125,7 +125,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
 
           <div className={`mt-auto pt-4 md:pt-6 border-t border-slate-100 dark:border-slate-700/50 text-xs md:text-lg flex items-center justify-between font-bold`}>
             <div className={`flex items-center gap-2 ${totalProduction >= historicalMetrics.avg7 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
-               <TrendingUp size={16} className={`${totalProduction < historicalMetrics.avg7 ? 'rotate-180' : ''} md:size-6`} /> 
+               <TrendingUp size={16} className={`${totalProduction < historicalMetrics.avg7 ? 'rotate-180' : ''} md:w-6 md:h-6`} /> 
                {totalProduction >= historicalMetrics.avg7 ? 'ABOVE 7D AVG' : 'BELOW 7D NORM'}
             </div>
             <div className="text-[8px] md:text-[10px] text-slate-300 dark:text-slate-600 uppercase font-black tracking-widest">Telemetry Active</div>
@@ -139,20 +139,20 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           
           <div>
             <div className="flex items-center gap-3 mb-6 md:mb-8">
-              <Users size={20} className="text-slate-400 md:size-6" />
+              <Users size={20} className="text-slate-400 md:w-6 md:h-6" />
               <h3 className="text-xs md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Workforce Status</h3>
             </div>
             <div className="space-y-6 md:space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
-                  <div className="p-2 md:p-3 bg-amber-500/10 dark:bg-amber-500/20 rounded-xl text-amber-600 dark:text-amber-400"><Briefcase size={20} className="md:size-6" /></div>
+                  <div className="p-2 md:p-3 bg-amber-500/10 dark:bg-amber-500/20 rounded-xl text-amber-600 dark:text-amber-400"><Briefcase size={20} className="md:w-6 md:h-6" /></div>
                   <span className="text-slate-600 dark:text-slate-300 font-bold text-sm md:text-lg uppercase">Officers</span>
                 </div>
                 <div className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">{latestPersonnel?.officers.toLocaleString() || "---"}</div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
-                  <div className="p-2 md:p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400"><Users size={20} className="md:size-6" /></div>
+                  <div className="p-2 md:p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400"><Users size={20} className="md:w-6 md:h-6" /></div>
                   <span className="text-slate-600 dark:text-slate-300 font-bold text-sm md:text-lg uppercase">Employees</span>
                 </div>
                 <div className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">{latestPersonnel?.employees.toLocaleString() || "---"}</div>
@@ -168,7 +168,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         <div className="bg-white dark:bg-slate-900/60 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm lg:col-span-2">
           <div className="flex items-center gap-3 mb-6">
-            <LayoutList size={20} className="text-emerald-500 md:size-6" />
+            <LayoutList size={20} className="text-emerald-500 md:w-6 md:h-6" />
             <h3 className="text-sm md:text-lg font-black text-slate-900 dark:text-white uppercase tracking-widest">Production Breakdown</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -192,11 +192,11 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         <div className="bg-white dark:bg-slate-800/80 p-6 md:p-10 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl lg:col-span-2 relative overflow-hidden">
           <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-            <div className="p-2 md:p-3 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg md:rounded-xl text-purple-600 dark:text-purple-400"><Sparkles size={24} className="md:size-7" /></div>
+            <div className="p-2 md:p-3 bg-purple-500/10 dark:bg-purple-500/20 rounded-lg md:rounded-xl text-purple-600 dark:text-purple-400"><Sparkles size={24} className="md:w-7 md:h-7" /></div>
             <h2 className="text-lg md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Executive Intelligence</h2>
           </div>
           <div className={`text-base md:text-2xl text-slate-700 dark:text-slate-200 leading-relaxed font-medium transition-opacity duration-700 max-w-4xl ${loadingInsights ? 'opacity-40 animate-pulse' : 'opacity-100'}`}>{insights}</div>
-          <div className="absolute -bottom-10 md:-bottom-20 -right-10 md:-right-20 opacity-5 text-purple-200 pointer-events-none"><Sparkles size={200} className="md:size-[300px]" /></div>
+          <div className="absolute -bottom-10 md:-bottom-20 -right-10 md:-right-20 opacity-5 text-purple-200 pointer-events-none"><Sparkles size={200} className="md:w-[300px] md:h-[300px]" /></div>
         </div>
         <div className="lg:col-span-1 bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col">
           <div className="flex items-center justify-between mb-4 md:mb-6">

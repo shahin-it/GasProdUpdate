@@ -13,9 +13,9 @@ import {
 
 const CompanyLogo = () => (
   <img 
-    src="asset/logo.png" 
+    src="logo.png" 
     alt="BGFCL Official Logo" 
-    className="h-8 md:h-12 w-auto block object-contain"
+    className="h-8 md:h-14 w-auto block object-contain"
     style={{ display: 'block' }}
   />
 );
@@ -200,7 +200,7 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 backdrop-blur-md px-4 md:px-8 py-3 md:py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm dark:shadow-2xl">
         <div className="flex items-center justify-between w-full sm:w-auto gap-4">
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="bg-[#004b49] p-0 md:p-1 rounded-lg md:rounded-xl shadow-lg border border-[#003a38] overflow-hidden flex items-center justify-center">
+            <div className="bg-[#004b49] p-0 rounded-lg md:rounded-xl shadow-lg border border-[#003a38] overflow-hidden flex items-center justify-center">
               <CompanyLogo />
             </div>
             <div>
