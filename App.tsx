@@ -8,7 +8,7 @@ import { dbService } from './services/dbService.ts';
 import { 
   Monitor, Settings, LayoutDashboard, Database, Fuel, 
   Lock, ChevronLeft, ChevronRight, 
-  Calendar, Server, AlertTriangle, Clock, RefreshCw, Wifi
+  Calendar, Server, AlertTriangle, Clock, RefreshCw, Wifi, Moon, Sun
 } from 'lucide-react';
 
 const CompanyLogo = () => (
@@ -28,7 +28,20 @@ const App: React.FC = () => {
   const [dbStatus, setDbStatus] = useState<'online' | 'offline' | 'mock'>('mock');
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
   const isInitialLoad = useRef(true);
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.theme = 'light';
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.theme = 'dark';
+      setIsDark(true);
+    }
+  };
 
   // Derived unique sorted dates from both datasets
   const availableDates = useMemo(() => {
@@ -68,7 +81,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Setup Real-time Subscriptions
   useEffect(() => {
     if (dbStatus !== 'online') return;
 
@@ -93,7 +105,6 @@ const App: React.FC = () => {
       }
 
       setLastUpdated(new Date());
-      // Reset syncing animation after a brief moment
       setTimeout(() => setIsSyncing(false), 1500);
     });
 
@@ -136,11 +147,9 @@ const App: React.FC = () => {
     }
   }, [productionData, personnelData, dbStatus]);
 
-  // Handlers
   const handleAddProduction = async (record: Omit<ProductionRecord, 'id'>) => {
     if (dbStatus === 'online') {
       await dbService.addRecord(record);
-      // State is handled by real-time subscription
     } else {
       setProductionData(prev => [{ ...record, id: Math.random().toString(36).substr(2, 9) }, ...prev]);
     }
@@ -187,48 +196,48 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0f172a]">
-      <header className="sticky top-0 z-50 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md px-8 py-4 flex items-center justify-between shadow-2xl">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 backdrop-blur-md px-8 py-4 flex items-center justify-between shadow-sm dark:shadow-2xl">
         <div className="flex items-center gap-4">
-          <div className="bg-slate-800 p-1.5 rounded-xl shadow-inner border border-slate-700/50">
+          <div className="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700/50">
             <CompanyLogo />
           </div>
           <div className="hidden sm:block">
-            <h1 className="text-xl font-black tracking-tight text-white uppercase leading-none">BGFCL GasPro <span className="text-emerald-500">Analytics</span></h1>
+            <h1 className="text-xl font-black tracking-tight uppercase leading-none text-slate-900 dark:text-white">BGFCL GasPro <span className="text-emerald-500">Analytics</span></h1>
             <div className="flex items-center gap-2 mt-1">
-              <p className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${isSyncing ? 'text-emerald-400' : 'text-slate-500'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-500 ${isSyncing ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`}>
                 {dbStatus === 'online' ? 'Supabase Cloud' : 'Offline Mode'}
               </p>
-              <div className={`w-1 h-1 rounded-full transition-colors duration-500 ${isSyncing ? 'bg-emerald-400 animate-ping' : 'bg-slate-700'}`}></div>
-              <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center gap-1">
+              <div className={`w-1 h-1 rounded-full transition-colors duration-500 ${isSyncing ? 'bg-emerald-400 animate-ping' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+              <p className="text-[10px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-widest flex items-center gap-1">
                 <RefreshCw size={10} className={`${isSyncing ? 'animate-spin' : 'animate-spin-slow'}`} /> Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </p>
             </div>
           </div>
         </div>
-        <nav className="flex items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-700/50 shadow-inner">
-          <button onClick={() => setView('dashboard')} className={`px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold transition-all ${view === 'dashboard' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+        <nav className="flex items-center bg-slate-100 dark:bg-slate-900/50 p-1 rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-inner">
+          <button onClick={() => setView('dashboard')} className={`px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold transition-all ${view === 'dashboard' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-md dark:shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
             <LayoutDashboard size={18} /> <span className="hidden md:inline">Dashboard</span>
           </button>
           
           {view === 'dashboard' && (
-            <div className="mx-2 flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700">
+            <div className="mx-2 flex items-center gap-1 bg-white/50 dark:bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
               <button 
                 onClick={() => { const idx = availableDates.indexOf(selectedDate); if (idx > 0) setSelectedDate(availableDates[idx - 1]); }} 
                 disabled={availableDates.indexOf(selectedDate) <= 0} 
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-10 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white disabled:opacity-10 transition-colors"
                 title="Previous Available Date"
               >
                 <ChevronLeft size={20} />
               </button>
               
-              <div className="flex items-center gap-2 px-3 text-white font-black text-sm border-x border-slate-700 group">
+              <div className="flex items-center gap-2 px-3 text-slate-700 dark:text-white font-black text-sm border-x border-slate-200 dark:border-slate-700 group">
                 <Calendar size={14} className="text-emerald-500 group-hover:scale-110 transition-transform" />
                 <input 
                   type="date" 
                   value={selectedDate} 
                   onChange={(e) => setSelectedDate(e.target.value)} 
-                  className="bg-transparent border-none focus:ring-0 outline-none p-0 w-32 cursor-pointer" 
+                  className="bg-transparent border-none focus:ring-0 outline-none p-0 w-32 cursor-pointer dark:color-scheme-dark" 
                 />
                 {selectedDate === latestDateInSystem && (
                   <span className="text-[8px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-black animate-pulse">LATEST</span>
@@ -238,7 +247,7 @@ const App: React.FC = () => {
               <button 
                 onClick={() => { const idx = availableDates.indexOf(selectedDate); if (idx < availableDates.length - 1) setSelectedDate(availableDates[idx + 1]); }} 
                 disabled={availableDates.indexOf(selectedDate) >= availableDates.length - 1} 
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-10 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white disabled:opacity-10 transition-colors"
                 title="Next Available Date"
               >
                 <ChevronRight size={20} />
@@ -247,30 +256,33 @@ const App: React.FC = () => {
           )}
 
           {isAdminAllowed && (
-            <button onClick={() => setView('admin')} className={`px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold transition-all ${view === 'admin' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+            <button onClick={() => setView('admin')} className={`px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold transition-all ${view === 'admin' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-md dark:shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
               <Database size={18} /> <span className="hidden md:inline">Admin</span>
             </button>
           )}
         </nav>
         <div className="hidden lg:flex items-center gap-4">
            {dbStatus === 'online' ? (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full border border-emerald-500/20 text-[10px] font-black uppercase">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 rounded-full border border-emerald-500/20 text-[10px] font-black uppercase">
                 <Wifi size={10} className="animate-pulse" /> Live Syncing
               </div>
            ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/20 text-[10px] font-black uppercase"><AlertTriangle size={10} /> Local Cache</div>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-500 rounded-full border border-amber-500/20 text-[10px] font-black uppercase"><AlertTriangle size={10} /> Local Cache</div>
            )}
-           <button className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-400 border border-slate-700/50 transition-colors"><Settings size={20} /></button>
+           <button onClick={toggleTheme} className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50 transition-colors">
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+           </button>
+           <button className="p-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/50 transition-colors"><Settings size={20} /></button>
         </div>
       </header>
       <main className="flex-1 px-8 py-8 max-w-[2000px] mx-auto w-full">
         {isLoading ? (
-          <div className="h-[60vh] flex flex-col items-center justify-center space-y-4 text-slate-500">
+          <div className="h-[60vh] flex flex-col items-center justify-center space-y-4 text-slate-400 dark:text-slate-500">
             <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
             <p className="font-bold uppercase tracking-[0.3em] text-sm animate-pulse">Initializing Data Stream...</p>
           </div>
         ) : view === 'dashboard' ? (
-          <Dashboard productionData={productionData} personnelData={personnelData} selectedDate={selectedDate} latestDateInSystem={latestDateInSystem} />
+          <Dashboard productionData={productionData} personnelData={personnelData} selectedDate={selectedDate} latestDateInSystem={latestDateInSystem} isDarkMode={isDark} />
         ) : (
           <AdminPanel 
             productionData={productionData} 
