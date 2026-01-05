@@ -10,6 +10,13 @@
   <script>
     tailwind.config = {
       darkMode: 'class',
+      theme: {
+        extend: {
+          screens: {
+            '4k': '2560px',
+          },
+        },
+      },
     }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +26,21 @@
     body {
       font-family: 'Inter', sans-serif;
       transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
     }
+    
+    /* 4K and Ultra-Wide Optimization: Reduce base font size to fit MORE content */
+    @media (min-width: 2560px) {
+      html {
+        font-size: 14px;
+      }
+    }
+    @media (min-width: 3840px) {
+      html {
+        font-size: 12px;
+      }
+    }
+
     .dark body {
       background-color: #0f172a;
       color: #f8fafc;
@@ -53,6 +74,7 @@
     }
   </style>
   <script>
+    // Ensure process.env is defined for modules
     window.process = window.process || { env: {} };
     
     // Theme Initialization
@@ -72,7 +94,9 @@
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>

@@ -72,7 +72,12 @@ FOR DELETE USING (true);
 ```
 
 ## 4. Environment Variables
-Configure your environment with:
-- `API_KEY`: Your Google Gemini API Key.
-- `SUPABASE_URL`: Your Supabase Project URL.
-- `SUPABASE_ANON_KEY`: Your Supabase Anonymous API Key.
+For the connection to work, create a `.env` file in your project root or set these variables in your deployment platform:
+
+```env
+API_KEY=your_gemini_api_key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
+
+The `vite.config.ts` will automatically inject these into the application build.

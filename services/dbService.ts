@@ -2,10 +2,19 @@
 import { createClient, RealtimeChannel } from '@supabase/supabase-js';
 import { ProductionRecord, PersonnelRecord } from '../types.ts';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+// Robust environment variable resolution
+const getEnv = (key: string): string => {
+  return (process.env as any)?.[key] || (window as any).process?.env?.[key] || '';
+};
+
+const supabaseUrl = getEnv('SUPABASE_URL');
+const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY');
 
 const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+if (!supabase) {
+  console.warn('Supabase is not initialized. Please check your environment variables: SUPABASE_URL and SUPABASE_ANON_KEY.');
+}
 
 export const dbService = {
   isConfigured(): boolean {
@@ -40,19 +49,24 @@ export const dbService = {
   // Production Records
   async getRecords(): Promise<ProductionRecord[]> {
     if (!supabase) return [];
-    const { data, error } = await supabase
-      .from('production_records')
-      .select('*')
-      .order('date', { ascending: false });
-    
-    if (error) {
-      console.error('Supabase Error (Production):', error.message, error.details);
-      if (error.code === '42501') {
-        console.warn('RLS Policy error detected. Please run the SQL policies provided in README.md');
+    try {
+      const { data, error } = await supabase
+        .from('production_records')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) {
+        console.error('Supabase Error (Production):', error.message, error.details);
+        if (error.code === '42501') {
+          console.warn('RLS Policy error detected. Please run the SQL policies provided in README.md');
+        }
+        return [];
       }
+      return data || [];
+    } catch (e) {
+      console.error('Connection failed:', e);
       return [];
     }
-    return data || [];
   },
 
   async addRecord(record: Omit<ProductionRecord, 'id'>): Promise<ProductionRecord | null> {
@@ -103,16 +117,21 @@ export const dbService = {
   // Personnel Records
   async getPersonnelRecords(): Promise<PersonnelRecord[]> {
     if (!supabase) return [];
-    const { data, error } = await supabase
-      .from('personnel_records')
-      .select('*')
-      .order('date', { ascending: false });
-    
-    if (error) {
-      console.error('Supabase Error (Personnel):', error.message);
+    try {
+      const { data, error } = await supabase
+        .from('personnel_records')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) {
+        console.error('Supabase Error (Personnel):', error.message);
+        return [];
+      }
+      return data || [];
+    } catch (e) {
+      console.error('Connection failed:', e);
       return [];
     }
-    return data || [];
   },
 
   async addPersonnelRecord(record: Omit<PersonnelRecord, 'id'>): Promise<PersonnelRecord | null> {
