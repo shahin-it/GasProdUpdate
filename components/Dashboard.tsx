@@ -140,8 +140,8 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
             {dayRecords.map((record) => (
                 <div key={record.field} className="p-3 md:p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/30 transition-all flex flex-col">
-                  <div className="text-slate-400 dark:text-slate-500 font-black text-[7px] md:text-[9px] uppercase tracking-widest mb-1 truncate">{record.field}</div>
-                  <div className="text-emerald-600 dark:text-emerald-400 font-black text-sm md:text-xl font-mono">{record.amount.toLocaleString()} <span className="text-[6px] md:text-[8px] text-slate-400 dark:text-slate-600 uppercase font-sans">MCF</span></div>
+                  <div className="text-slate-400 dark:text-slate-500 font-black text-[12px] md:text-[14px] uppercase tracking-widest mb-1 truncate">{record.field}</div>
+                  <div className="text-emerald-600 dark:text-emerald-400 font-black text-xl md:text-xxl font-mono">{record.amount.toLocaleString()} <span className="text-[8px] md:text-[10px] text-slate-400 dark:text-slate-600 uppercase font-sans">MCF</span></div>
                 </div>
             ))}
           </div>
