@@ -28,7 +28,11 @@ export const dbService = {
         { event: '*', schema: 'public', table: 'personnel_records' },
         (payload) => callback({ type: 'personnel', ...payload })
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Realtime subscription error. Check RLS policies for replication.');
+        }
+      });
 
     return channel;
   },
@@ -42,7 +46,10 @@ export const dbService = {
       .order('date', { ascending: false });
     
     if (error) {
-      console.error('Error fetching production records:', error);
+      console.error('Supabase Error (Production):', error.message, error.details);
+      if (error.code === '42501') {
+        console.warn('RLS Policy error detected. Please run the SQL policies provided in README.md');
+      }
       return [];
     }
     return data || [];
@@ -57,7 +64,7 @@ export const dbService = {
       .single();
     
     if (error) {
-      console.error('Error adding production record:', error);
+      console.error('Error adding production record:', error.message);
       return null;
     }
     return data;
@@ -73,7 +80,7 @@ export const dbService = {
       .single();
     
     if (error) {
-      console.error('Error updating production record:', error);
+      console.error('Error updating production record:', error.message);
       return null;
     }
     return data;
@@ -87,7 +94,7 @@ export const dbService = {
       .eq('id', id);
     
     if (error) {
-      console.error('Error deleting production record:', error);
+      console.error('Error deleting production record:', error.message);
       return false;
     }
     return true;
@@ -102,7 +109,7 @@ export const dbService = {
       .order('date', { ascending: false });
     
     if (error) {
-      console.error('Error fetching personnel records:', error);
+      console.error('Supabase Error (Personnel):', error.message);
       return [];
     }
     return data || [];
@@ -117,7 +124,7 @@ export const dbService = {
       .single();
     
     if (error) {
-      console.error('Error adding personnel record:', error);
+      console.error('Error adding personnel record:', error.message);
       return null;
     }
     return data;
@@ -133,7 +140,7 @@ export const dbService = {
       .single();
     
     if (error) {
-      console.error('Error updating personnel record:', error);
+      console.error('Error updating personnel record:', error.message);
       return null;
     }
     return data;
@@ -147,7 +154,7 @@ export const dbService = {
       .eq('id', id);
     
     if (error) {
-      console.error('Error deleting personnel record:', error);
+      console.error('Error deleting personnel record:', error.message);
       return false;
     }
     return true;
