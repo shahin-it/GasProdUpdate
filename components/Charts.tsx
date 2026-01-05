@@ -43,7 +43,7 @@ export const FieldDistributionChart: React.FC<TargetedProps> = ({ data, targetDa
   }, [data, targetDate]);
 
   return (
-    <div className="h-[280px] w-full flex flex-col">
+    <div className="h-[350px] w-full flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Daily Production Share %</h3>
         <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-bold uppercase tracking-tighter">{targetDate}</span>
@@ -104,7 +104,7 @@ export const HistoricalTrendChart: React.FC<TrendProps> = ({ data, centerDate, i
   const fields = useMemo(() => Array.from(new Set<string>(data.map(d => d.field))), [data]);
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[350px] w-full">
       <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100 uppercase tracking-tight">Window Trend (7D Peak)</h3>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData}>
@@ -143,7 +143,7 @@ export const FieldComparisonBar: React.FC<TargetedProps> = ({ data, targetDate, 
   const dayData = useMemo(() => data.filter(d => d.date === targetDate), [data, targetDate]);
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-[350px] w-full">
       <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100 uppercase tracking-tight">Volume Benchmarking</h3>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={dayData}>
