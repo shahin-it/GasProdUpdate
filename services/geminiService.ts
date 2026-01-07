@@ -9,7 +9,9 @@ export const getAIInsights = async (data: ProductionRecord[], targetDate: string
   const targetDayData = data.filter(r => r.date === targetDate);
   if (targetDayData.length === 0) return "No operational logs found for this date.";
 
-  const dataSummary = targetDayData.map(r => `${r.field}: ${r.amount} MCF`).join('\n');
+  const dataSummary = targetDayData.map(r => 
+    `${r.field}: Gas ${r.amount} MCF, Condensate ${r.condensate} BBL, Water ${r.water} BBL`
+  ).join('\n');
   
   const prompt = `
     Analyze the gas production data for the specific date: ${targetDate}.
@@ -17,11 +19,11 @@ export const getAIInsights = async (data: ProductionRecord[], targetDate: string
     MD's View (Managing Director):
     ${dataSummary}
     
-    Context: This is being viewed on a Google TV.
+    Context: This is being viewed on a Google TV at a Gas Production Company (BGFCL).
     Task:
-    1. Summarize performance for ${targetDate} compared to typical operations.
-    2. Identify the top performing field and any concerns (e.g. low output fields).
-    3. Provide a strategic takeaway for the MD.
+    1. Summarize Gas, Condensate, and Water production performance for ${targetDate}.
+    2. Identify efficiency or maintenance concerns based on water levels or condensate yield.
+    3. Provide a strategic takeaway for the MD regarding field health.
     
     Keep it high-level, executive, and direct (max 3 short paragraphs). Do not just repeat numbers; provide insight.
   `;

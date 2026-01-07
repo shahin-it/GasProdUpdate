@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
-import { FIELDS } from '../constants.ts';
+import { FIELDS, ORGANOGRAM } from '../constants.ts';
 import { ProductionRecord, PersonnelRecord } from '../types.ts';
 import { 
   PlusCircle, Trash2, Database, AlertCircle, Loader2, XCircle, 
   Edit3, ChevronLeft, ChevronRight, Save, X, Users, Briefcase, LayoutGrid, UserCheck,
-  Fuel, Calendar
+  Fuel, Calendar, Droplets, FlaskConical, Target
 } from 'lucide-react';
 
 interface Props {
@@ -31,6 +31,8 @@ const AdminPanel: React.FC<Props> = ({
   // Production Form State
   const [field, setField] = useState(FIELDS[0].name);
   const [amount, setAmount] = useState<string>('');
+  const [condensate, setCondensate] = useState<string>('');
+  const [water, setWater] = useState<string>('');
   const [prodDate, setProdDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [editingProdId, setEditingProdId] = useState<string | null>(null);
 
@@ -38,6 +40,8 @@ const AdminPanel: React.FC<Props> = ({
   const [persDate, setPersDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [officers, setOfficers] = useState<string>('');
   const [employees, setEmployees] = useState<string>('');
+  const [appOfficers, setAppOfficers] = useState<string>(ORGANOGRAM.OFFICERS.toString());
+  const [appEmployees, setAppEmployees] = useState<string>(ORGANOGRAM.EMPLOYEES.toString());
   const [editingPersId, setEditingPersId] = useState<string | null>(null);
   
   // UI State
@@ -50,15 +54,30 @@ const AdminPanel: React.FC<Props> = ({
     e.preventDefault();
     setValidationError(null);
     const numAmount = Number(amount);
-    if (!amount || isNaN(numAmount)) { setValidationError("Enter numeric production amount."); return; }
+    const numCond = Number(condensate || 0);
+    const numWater = Number(water || 0);
+
+    if (!amount || isNaN(numAmount)) { setValidationError("Enter numeric gas production amount."); return; }
+    if (isNaN(numCond) || isNaN(numWater)) { setValidationError("Enter numeric liquid production values."); return; }
+
     if (productionData.some(r => r.field === field && r.date === prodDate && r.id !== editingProdId)) {
       setValidationError(`Entry for ${field} on ${prodDate} already exists.`); return;
     }
+    
     setIsSubmitting(true);
     try {
-      if (editingProdId) await onUpdateProduction(editingProdId, { field, amount: numAmount, date: prodDate });
-      else await onAddProduction({ field, amount: numAmount, date: prodDate });
-      setAmount(''); setEditingProdId(null);
+      const payload = { 
+        field, 
+        amount: numAmount, 
+        condensate: numCond, 
+        water: numWater, 
+        date: prodDate 
+      };
+      if (editingProdId) await onUpdateProduction(editingProdId, payload);
+      else await onAddProduction(payload);
+      
+      setAmount(''); setCondensate(''); setWater(''); 
+      setEditingProdId(null);
     } catch { setValidationError("Database error occurred."); } finally { setIsSubmitting(false); }
   };
 
@@ -67,25 +86,50 @@ const AdminPanel: React.FC<Props> = ({
     setValidationError(null);
     const numOff = Number(officers);
     const numEmp = Number(employees);
-    if (isNaN(numOff) || isNaN(numEmp)) { setValidationError("Enter valid personnel counts."); return; }
+    const numAppOff = Number(appOfficers);
+    const numAppEmp = Number(appEmployees);
+    
+    if (isNaN(numOff) || isNaN(numEmp) || isNaN(numAppOff) || isNaN(numAppEmp)) { 
+      setValidationError("Enter valid personnel counts."); return; 
+    }
+    
     if (personnelData.some(p => p.date === persDate && p.id !== editingPersId)) {
        setValidationError(`Personnel data for ${persDate} already exists.`); return;
     }
+    
     setIsSubmitting(true);
     try {
-      if (editingPersId) await onUpdatePersonnel(editingPersId, { date: persDate, officers: numOff, employees: numEmp });
-      else await onAddPersonnel({ date: persDate, officers: numOff, employees: numEmp });
-      setOfficers(''); setEmployees(''); setEditingPersId(null);
+      const payload = { 
+        date: persDate, 
+        officers: numOff, 
+        employees: numEmp,
+        approved_officers: numAppOff,
+        approved_employees: numAppEmp
+      };
+      
+      if (editingPersId) await onUpdatePersonnel(editingPersId, payload);
+      else await onAddPersonnel(payload);
+      
+      setOfficers(''); setEmployees(''); 
+      setEditingPersId(null);
     } catch { setValidationError("Personnel database update failed."); } finally { setIsSubmitting(false); }
   };
 
   const startEditProd = (record: ProductionRecord) => {
-    setField(record.field); setAmount(record.amount.toString()); setProdDate(record.date);
+    setField(record.field); 
+    setAmount(record.amount.toString()); 
+    setCondensate(record.condensate?.toString() || '');
+    setWater(record.water?.toString() || '');
+    setProdDate(record.date);
     setEditingProdId(record.id); setValidationError(null); setActiveTab('production');
   };
 
   const startEditPers = (record: PersonnelRecord) => {
-    setPersDate(record.date); setOfficers(record.officers.toString()); setEmployees(record.employees.toString());
+    setPersDate(record.date); 
+    setOfficers(record.officers.toString()); 
+    setEmployees(record.employees.toString());
+    setAppOfficers((record.approved_officers || ORGANOGRAM.OFFICERS).toString());
+    setAppEmployees((record.approved_employees || ORGANOGRAM.EMPLOYEES).toString());
     setEditingPersId(record.id); setValidationError(null); setActiveTab('personnel');
   };
 
@@ -118,21 +162,68 @@ const AdminPanel: React.FC<Props> = ({
           
           {activeTab === 'production' ? (
             <form onSubmit={handleProductionSubmit} className="space-y-5 md:space-y-6">
-              <div><label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Field Selection</label><select value={field} onChange={(e) => setField(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">{FIELDS.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}</select></div>
+              <div>
+                <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Field Selection</label>
+                <select value={field} onChange={(e) => setField(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+                  {FIELDS.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                </select>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Volume (MCF)</label><input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-500" required /></div>
-                <div><label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Log Date</label><input type="date" value={prodDate} onChange={(e) => setProdDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required /></div>
+                <div>
+                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Gas (MCF)</label>
+                  <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-500" required />
+                </div>
+                <div>
+                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Log Date</label>
+                  <input type="date" value={prodDate} onChange={(e) => setProdDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Condensate (BBL)</label>
+                  <input type="number" step="0.01" value={condensate} onChange={(e) => setCondensate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Produced Water (BBL)</label>
+                  <input type="number" step="0.01" value={water} onChange={(e) => setWater(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" />
+                </div>
               </div>
               <button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 md:py-5 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-xs md:text-sm shadow-xl flex items-center justify-center gap-3">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : editingProdId ? <Save size={16} /> : <PlusCircle size={16} />} {editingProdId ? "Apply Update" : "Push Log"}</button>
               {editingProdId && <button type="button" onClick={() => setEditingProdId(null)} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
             </form>
           ) : (
             <form onSubmit={handlePersonnelSubmit} className="space-y-5 md:space-y-6">
-              <div><label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Census Date</label><input type="date" value={persDate} onChange={(e) => setPersDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500" required /></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative"><label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Officers</label><input type="number" value={officers} onChange={(e) => setOfficers(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" required /></div>
-                <div className="relative"><label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Employees</label><input type="number" value={employees} onChange={(e) => setEmployees(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" required /></div>
+              <div>
+                <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Census Date</label>
+                <input type="date" value={persDate} onChange={(e) => setPersDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500" required />
               </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <span className="block text-[8px] font-black text-emerald-500 uppercase tracking-widest">Present Strength</span>
+                  <div>
+                    <label className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase mb-1">Officers</label>
+                    <input type="number" value={officers} onChange={(e) => setOfficers(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" required />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase mb-1">Staff</label>
+                    <input type="number" value={employees} onChange={(e) => setEmployees(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" required />
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <span className="block text-[8px] font-black text-blue-500 uppercase tracking-widest">Approved (Organogram)</span>
+                  <div>
+                    <label className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase mb-1">Officers</label>
+                    <input type="number" value={appOfficers} onChange={(e) => setAppOfficers(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500" required />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase mb-1">Staff</label>
+                    <input type="number" value={appEmployees} onChange={(e) => setAppEmployees(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500" required />
+                  </div>
+                </div>
+              </div>
+              
               <button type="submit" disabled={isSubmitting} className="w-full bg-amber-600 hover:bg-amber-500 py-4 md:py-5 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-xs md:text-sm shadow-xl flex items-center justify-center gap-3">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : editingPersId ? <Save size={16} /> : <UserCheck size={16} />} {editingPersId ? "Update Census" : "Submit Census"}</button>
               {editingPersId && <button type="button" onClick={() => setEditingPersId(null)} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
             </form>
@@ -153,10 +244,20 @@ const AdminPanel: React.FC<Props> = ({
                  <div key={record.id} className="flex items-center justify-between p-4 md:p-6 bg-slate-50 dark:bg-slate-900 rounded-xl md:rounded-2xl border border-slate-100 dark:border-slate-700/50 hover:border-emerald-500/30 transition-all shadow-sm">
                     <div className="flex items-center gap-3 md:gap-6">
                       <div className="hidden sm:block bg-white dark:bg-slate-800 p-2 md:p-3 rounded-lg md:rounded-xl text-slate-400 dark:text-slate-500 shadow-sm border border-slate-100 dark:border-slate-700"><Fuel size={20} /></div>
-                      <div><div className="font-black text-sm md:text-lg text-slate-800 dark:text-slate-100">{record.field}</div><div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {record.date}</div></div>
+                      <div>
+                        <div className="font-black text-sm md:text-lg text-slate-800 dark:text-slate-100">{record.field}</div>
+                        <div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {record.date}</div>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-[7px] bg-blue-500/10 text-blue-500 px-1 rounded">C: {record.condensate || 0}</span>
+                          <span className="text-[7px] bg-amber-500/10 text-amber-500 px-1 rounded">W: {record.water || 0}</span>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 md:gap-8">
-                      <div className="text-right"><div className="text-lg md:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{record.amount.toLocaleString()}</div><div className="text-[8px] md:text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">MCF</div></div>
+                      <div className="text-right">
+                        <div className="text-lg md:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{record.amount.toLocaleString()}</div>
+                        <div className="text-[8px] md:text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">MCF</div>
+                      </div>
                       <div className="flex items-center gap-1 md:gap-2">
                         <button onClick={() => startEditProd(record)} className="p-1.5 md:p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-400/10 rounded-lg"><Edit3 size={16} /></button>
                         <button onClick={async () => { if(confirm("Delete record?")) { setLoadingActionId(record.id); await onDeleteProduction(record.id); setLoadingActionId(null); } }} className="p-1.5 md:p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-400/10 rounded-lg">{loadingActionId === record.id ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}</button>
@@ -173,8 +274,14 @@ const AdminPanel: React.FC<Props> = ({
                    </div>
                    <div className="flex items-center gap-4 md:gap-10">
                      <div className="flex items-center gap-4 md:gap-6">
-                        <div className="text-right"><div className="text-base md:text-xl font-black text-amber-600 dark:text-amber-500 font-mono">{record.officers}</div><div className="text-[7px] md:text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase">OFF.</div></div>
-                        <div className="text-right"><div className="text-base md:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{record.employees}</div><div className="text-[7px] md:text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase">EMP.</div></div>
+                        <div className="text-right">
+                          <div className="text-base md:text-xl font-black text-amber-600 dark:text-amber-500 font-mono">{record.officers}</div>
+                          <div className="text-[7px] md:text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-tighter">OFF ({record.approved_officers || 'N/A'})</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-base md:text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">{record.employees}</div>
+                          <div className="text-[7px] md:text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-tighter">STAFF ({record.approved_employees || 'N/A'})</div>
+                        </div>
                      </div>
                      <div className="flex items-center gap-1 md:gap-2">
                        <button onClick={() => startEditPers(record)} className="p-1.5 md:p-2.5 text-slate-400 hover:text-amber-600 hover:bg-amber-400/10 rounded-lg"><Edit3 size={16} /></button>

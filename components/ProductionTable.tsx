@@ -11,12 +11,14 @@ const ProductionTable: React.FC<Props> = ({ data }) => {
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50">
-      <table className="w-full text-left border-collapse">
+      <table className="w-full text-left border-collapse min-w-[600px]">
         <thead>
           <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
             <th className="px-6 py-4 font-semibold">Date</th>
             <th className="px-6 py-4 font-semibold">Field Name</th>
-            <th className="px-6 py-4 font-semibold text-right">Production (MCF)</th>
+            <th className="px-6 py-4 font-semibold text-right">Gas (MCF)</th>
+            <th className="px-6 py-4 font-semibold text-right">Cond. (BBL)</th>
+            <th className="px-6 py-4 font-semibold text-right">Water (BBL)</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -26,6 +28,12 @@ const ProductionTable: React.FC<Props> = ({ data }) => {
               <td className="px-6 py-4 text-slate-900 dark:text-slate-100">{record.field}</td>
               <td className="px-6 py-4 text-right font-mono text-emerald-600 dark:text-emerald-400 font-bold">
                 {record.amount.toLocaleString()}
+              </td>
+              <td className="px-6 py-4 text-right font-mono text-blue-600 dark:text-blue-400 font-bold">
+                {record.condensate?.toLocaleString() || 0}
+              </td>
+              <td className="px-6 py-4 text-right font-mono text-amber-600 dark:text-amber-500 font-bold">
+                {record.water?.toLocaleString() || 0}
               </td>
             </tr>
           ))}

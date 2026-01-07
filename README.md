@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS production_records (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   field TEXT NOT NULL,
   amount NUMERIC NOT NULL,
+  condensate NUMERIC DEFAULT 0,
+  water NUMERIC DEFAULT 0,
   date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -26,6 +28,8 @@ CREATE TABLE IF NOT EXISTS personnel_records (
   date DATE UNIQUE NOT NULL,
   officers INTEGER NOT NULL,
   employees INTEGER NOT NULL,
+  approved_officers INTEGER DEFAULT 65,
+  approved_employees INTEGER DEFAULT 280,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
