@@ -30,7 +30,9 @@ const App: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isSyncing, setIsSyncing] = useState(false);
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
+  
   const isInitialLoad = useRef(true);
+  const prevLatestDate = useRef<string | null>(null);
 
   const toggleTheme = () => {
     if (isDark) {
@@ -130,12 +132,24 @@ const App: React.FC = () => {
     initialize();
   }, []);
 
+  // Auto-load logic: Switch to the latest date on initial load or if a NEWER date is added to the system
   useEffect(() => {
     if (!isLoading && availableDates.length > 0) {
-      if (isInitialLoad.current || !availableDates.includes(selectedDate)) {
-        setSelectedDate(latestDateInSystem);
+      const systemLatest = latestDateInSystem;
+      
+      // We switch dates if:
+      // 1. It's the first time data has loaded
+      // 2. The currently selected date was just deleted (no longer in system)
+      // 3. A strictly NEWER date has appeared (auto-jump to latest)
+      const isNewerDateAvailable = prevLatestDate.current && systemLatest > prevLatestDate.current;
+      const isCurrentlySelectedValid = availableDates.includes(selectedDate);
+      
+      if (isInitialLoad.current || !isCurrentlySelectedValid || isNewerDateAvailable) {
+        setSelectedDate(systemLatest);
         isInitialLoad.current = false;
       }
+      
+      prevLatestDate.current = systemLatest;
     }
   }, [availableDates, latestDateInSystem, isLoading, selectedDate]);
 
