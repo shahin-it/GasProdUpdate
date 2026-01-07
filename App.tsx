@@ -218,7 +218,7 @@ const App: React.FC = () => {
               <CompanyLogo />
             </div>
             <div>
-              <h1 className="text-sm md:text-xl font-black tracking-tight uppercase leading-none text-slate-900 dark:text-white">BGFCL GasPro <span className="text-emerald-500">Analytics</span></h1>
+              <h1 className="text-sm md:text-xl font-black tracking-tight uppercase leading-none text-slate-900 dark:text-white">BGFCL <span className="text-emerald-500">Dashboard</span></h1>
               <p className="text-[8px] md:text-[10px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-0.5 md:mt-1 flex items-center gap-1">
                 <RefreshCw size={8} className={`${isSyncing ? 'animate-spin' : 'animate-spin-slow'}`} /> Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
