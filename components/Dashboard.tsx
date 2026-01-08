@@ -213,6 +213,35 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </div>
         </div>
 
+        <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-2 4k:col-span-2">
+          <div className="flex items-center gap-3 mb-4">
+            <LayoutList size={18} className="text-emerald-500" />
+            <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field-wise Operational Summary</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 4k:grid-cols-6 gap-2 md:gap-4">
+            {dayRecords.map((record) => (
+                <div key={record.field} className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/30 transition-all flex flex-col">
+                  <div className="text-slate-400 dark:text-slate-500 font-black text-[12px] md:text-[14px] uppercase tracking-widest mb-2 truncate">{record.field}</div>
+                  <div className="space-y-1">
+                    <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl font-mono">{record.amount.toLocaleString()} <span className="text-[8px] text-slate-400 uppercase font-sans">MCF</span></div>
+                    <div className="flex justify-between items-center text-[10px] md:text-[11px] font-bold">
+                      <span className="text-blue-500 uppercase tracking-tighter">Cond:</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-mono">{record.condensate?.toLocaleString() || 0} BBL</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] md:text-[11px] font-bold">
+                      <span className="text-amber-500 uppercase tracking-tighter">Water:</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-mono">{record.water?.toLocaleString() || 0} BBL</span>
+                    </div>
+                  </div>
+                </div>
+            ))}
+          </div>
+          {dayRecords.length === 0 && <div className="text-slate-400 dark:text-slate-500 text-center py-10 font-bold uppercase tracking-widest border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">No data found</div>}
+        </div>
+      </div>
+
+      {/* Row 2: Breakdown (Larger)| Benchmarking */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-6 gap-4 md:gap-6">
         <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-1 4k:col-span-2">
           <FieldDistributionChart data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
         </div>
@@ -227,11 +256,11 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
               </div>
               <span className="text-[8px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">BGFCL Target</span>
             </div>
-            
+
             <div className="space-y-3 md:space-y-4">
               {renderWorkforceRow('Officers', <Briefcase size={14} />, stats.officers, stats.targetOfficers, stats.offDiff, 'bg-amber-500/10 text-amber-600 dark:text-amber-400')}
               {renderWorkforceRow('Staff', <Users size={14} />, stats.employees, stats.targetEmployees, stats.empDiff, 'bg-blue-500/10 text-blue-600 dark:text-blue-400')}
-              
+
               <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 md:p-2 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400"><Target size={14} /></div>
@@ -246,35 +275,6 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Row 2: Breakdown (Larger)| Benchmarking */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-6 gap-4 md:gap-6">
-        <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-2 4k:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <LayoutList size={18} className="text-emerald-500" />
-            <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field-wise Operational Summary</h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 4k:grid-cols-6 gap-2 md:gap-4">
-            {dayRecords.map((record) => (
-              <div key={record.field} className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/30 transition-all flex flex-col">
-                <div className="text-slate-400 dark:text-slate-500 font-black text-[12px] md:text-[14px] uppercase tracking-widest mb-2 truncate">{record.field}</div>
-                <div className="space-y-1">
-                  <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl font-mono">{record.amount.toLocaleString()} <span className="text-[8px] text-slate-400 uppercase font-sans">MCF</span></div>
-                  <div className="flex justify-between items-center text-[10px] md:text-[11px] font-bold">
-                    <span className="text-blue-500 uppercase tracking-tighter">Cond:</span>
-                    <span className="text-slate-700 dark:text-slate-300 font-mono">{record.condensate?.toLocaleString() || 0} BBL</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] md:text-[11px] font-bold">
-                    <span className="text-amber-500 uppercase tracking-tighter">Water:</span>
-                    <span className="text-slate-700 dark:text-slate-300 font-mono">{record.water?.toLocaleString() || 0} BBL</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {dayRecords.length === 0 && <div className="text-slate-400 dark:text-slate-500 text-center py-10 font-bold uppercase tracking-widest border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">No data found</div>}
         </div>
 
         <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-2 4k:col-span-2">
