@@ -13,7 +13,6 @@
       theme: {
         extend: {
           screens: {
-            'tv': '1800px',
             '4k': '2560px',
           },
         },
@@ -30,62 +29,55 @@
       overflow-x: hidden;
     }
     
-    /* Desktop-like scaling for large TVs */
-    html {
-      font-size: 16px;
-    }
-    
-    @media (min-width: 1920px) {
-      html {
-        font-size: 15px; /* Shrink slightly to fit more "desktop" style content */
-      }
-    }
-
+    /* 4K and Ultra-Wide Optimization: Reduce base font size to fit MORE content */
     @media (min-width: 2560px) {
       html {
         font-size: 14px;
       }
     }
+    @media (min-width: 3840px) {
+      html {
+        font-size: 12px;
+      }
+    }
 
     .dark body {
-      background-color: #020617; /* Deeper black for TV OLEDs */
+      background-color: #0f172a;
       color: #f8fafc;
     }
     body:not(.dark) {
-      background-color: #f1f5f9;
+      background-color: #f8fafc;
       color: #0f172a;
     }
-    
     ::-webkit-scrollbar {
-      width: 6px;
+      width: 8px;
     }
     ::-webkit-scrollbar-track {
       background: transparent;
     }
     .dark ::-webkit-scrollbar-track {
-      background: #0f172a;
+      background: #1e293b;
     }
     ::-webkit-scrollbar-thumb {
-      background: #475569;
-      border-radius: 10px;
+      background: #cbd5e1;
+      border-radius: 4px;
     }
-    
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
     .animate-spin-slow {
-      animation: spin 8s linear infinite;
+      animation: spin 3s linear infinite;
     }
     @keyframes spin {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
-    
-    /* Executive Glass Effect */
-    .executive-card {
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
   </style>
   <script>
+    // Ensure process.env is defined for modules
     window.process = window.process || { env: {} };
+    
+    // Theme Initialization
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     } else {
