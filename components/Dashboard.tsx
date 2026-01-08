@@ -159,7 +159,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
       {/* Row 1: Primary Metrics */}
       <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-4 gap-4 md:gap-6">
         {/* Aggregate Daily Production (Gas) */}
-        <div className="bg-white dark:bg-slate-800/80 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center xl:col-span-2 4k:col-span-2 relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-800/80 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-center xl:col-span-1 4k:col-span-1 relative overflow-hidden group">
           <div className="flex items-center gap-3 md:gap-4 mb-2">
             <div className="p-1.5 md:p-2 bg-blue-500/10 dark:bg-blue-500/20 rounded-xl text-blue-600 dark:text-blue-400"><Activity size={20} /></div>
             <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[8px] md:text-xs">Aggregate Daily Gas Production</span>
@@ -213,6 +213,10 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </div>
         </div>
 
+        <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-1 4k:col-span-2">
+          <FieldDistributionChart data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
+        </div>
+
         {/* Workforce Card - Benchmarked against Dynamic Organogram from DB */}
         <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-between relative overflow-hidden xl:col-span-1 4k:col-span-1">
           <div>
@@ -245,9 +249,9 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
         </div>
       </div>
 
-      {/* Row 2: Breakdown (Larger) */}
+      {/* Row 2: Breakdown (Larger)| Benchmarking */}
       <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-6 gap-4 md:gap-6">
-        <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-3 4k:col-span-4">
+        <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-2 4k:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <LayoutList size={18} className="text-emerald-500" />
             <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field-wise Operational Summary</h3>
@@ -272,20 +276,28 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </div>
           {dayRecords.length === 0 && <div className="text-slate-400 dark:text-slate-500 text-center py-10 font-bold uppercase tracking-widest border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">No data found</div>}
         </div>
-        
-        <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-1 4k:col-span-2">
-          <FieldDistributionChart data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
+
+        <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-2 4k:col-span-2">
+          <FieldComparisonBar data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
         </div>
       </div>
 
-      {/* Row 3: Trend | Benchmarking | Activity */}
-      <div className="grid grid-cols-1 xl:grid-cols-8 gap-4 md:gap-6">
-        <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-3">
-           <HistoricalTrendChart data={productionData} centerDate={selectedDate} isDarkMode={isDarkMode} />
+      {/* Row 3: Trend | Activity */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-6 gap-4 md:gap-6">
+        <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-2 4k:col-span-2">
+          <HistoricalTrendChart data={productionData} centerDate={selectedDate} isDarkMode={isDarkMode} />
         </div>
-        <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-3">
-           <FieldComparisonBar data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
+
+        <div className="bg-white dark:bg-slate-800/50 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-2 4k:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest"><Clock size={16} className="text-slate-400" /> Recent Field Activity</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto max-h-[400px]"><ProductionTable data={productionData} /></div>
         </div>
+      </div>
+
+      {/* Row 4: Trend | Benchmarking | Activity */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-2">
            <div className="flex items-center gap-2 mb-4">
               <Sparkles size={16} className="text-purple-500" />
@@ -295,12 +307,6 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-800/50 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest"><Clock size={16} className="text-slate-400" /> Recent Field Activity</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto max-h-[400px]"><ProductionTable data={productionData} /></div>
-      </div>
     </div>
   );
 };
