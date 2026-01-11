@@ -221,14 +221,14 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           <div className="grid grid-cols-2 md:grid-cols-3 4k:grid-cols-6 gap-2 md:gap-4">
             {dayRecords.map((record) => (
                 <div key={record.field} className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/30 transition-all flex flex-col">
-                  <div className="text-slate-400 dark:text-slate-500 font-black text-[12px] md:text-[14px] uppercase tracking-widest mb-2 truncate">{record.field}</div>
+                  <div className="text-slate-400 dark:text-slate-500 font-black text-[14px] md:text-[16px] uppercase tracking-widest mb-2 truncate">{record.field}</div>
                   <div className="space-y-1">
                     <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl font-mono">{record.amount.toLocaleString()} <span className="text-[8px] text-slate-400 uppercase font-sans">MCF</span></div>
-                    <div className="flex justify-between items-center text-[10px] md:text-[11px] font-bold">
+                    <div className="flex justify-between items-center text-[12px] md:text-[13px] font-bold">
                       <span className="text-blue-500 uppercase tracking-tighter">Cond:</span>
-                      <span className="text-slate-700 dark:text-slate-300 font-mono">{record.condensate?.toLocaleString() || 0} BBL</span>
+                      <span className="text-slate-700 dark:text-slate-300  font-mono">{record.condensate?.toLocaleString() || 0} BBL</span>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] md:text-[11px] font-bold">
+                    <div className="flex justify-between items-center text-[12px] md:text-[13px] font-bold">
                       <span className="text-amber-500 uppercase tracking-tighter">Water:</span>
                       <span className="text-slate-700 dark:text-slate-300 font-mono">{record.water?.toLocaleString() || 0} BBL</span>
                     </div>
