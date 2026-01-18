@@ -5,6 +5,7 @@ import {
   PieChart, Pie, Cell, Legend, AreaChart, Area
 } from 'recharts';
 import { ProductionRecord } from '../types.ts';
+import { formatDisplayDate } from '../constants.ts';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -46,7 +47,7 @@ export const FieldDistributionChart: React.FC<TargetedProps> = ({ data, targetDa
     <div className="h-[350px] w-full flex flex-col">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Daily Production Share %</h3>
-        <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-bold uppercase tracking-tighter">{targetDate}</span>
+        <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-bold uppercase tracking-tighter">{formatDisplayDate(targetDate)}</span>
       </div>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
@@ -117,9 +118,20 @@ export const HistoricalTrendChart: React.FC<TrendProps> = ({ data, centerDate, i
             ))}
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={getGridColor(isDarkMode)} vertical={false} />
-          <XAxis dataKey="date" stroke={getTextColor(isDarkMode)} fontSize={10} tickLine={false} axisLine={false} />
+          <XAxis 
+            dataKey="date" 
+            stroke={getTextColor(isDarkMode)} 
+            fontSize={10} 
+            tickLine={false} 
+            axisLine={false} 
+            tickFormatter={formatDisplayDate}
+          />
           <YAxis stroke={getTextColor(isDarkMode)} fontSize={10} tickLine={false} axisLine={false} />
-          <Tooltip contentStyle={getTooltipStyle(isDarkMode)} itemStyle={{ color: isDarkMode ? '#f8fafc' : '#0f172a' }} />
+          <Tooltip 
+            labelFormatter={formatDisplayDate}
+            contentStyle={getTooltipStyle(isDarkMode)} 
+            itemStyle={{ color: isDarkMode ? '#f8fafc' : '#0f172a' }} 
+          />
           <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', color: getTextColor(isDarkMode) }} />
           {fields.map((field, index) => (
             <Area

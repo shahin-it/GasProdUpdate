@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { FIELDS, ORGANOGRAM } from '../constants.ts';
+import { FIELDS, ORGANOGRAM, formatDisplayDate } from '../constants.ts';
 import { ProductionRecord, PersonnelRecord } from '../types.ts';
 import { 
   PlusCircle, Trash2, Database, AlertCircle, Loader2, XCircle, 
@@ -61,7 +61,7 @@ const AdminPanel: React.FC<Props> = ({
     if (isNaN(numCond) || isNaN(numWater)) { setValidationError("Enter numeric liquid production values."); return; }
 
     if (productionData.some(r => r.field === field && r.date === prodDate && r.id !== editingProdId)) {
-      setValidationError(`Entry for ${field} on ${prodDate} already exists.`); return;
+      setValidationError(`Entry for ${field} on ${formatDisplayDate(prodDate)} already exists.`); return;
     }
     
     setIsSubmitting(true);
@@ -94,7 +94,7 @@ const AdminPanel: React.FC<Props> = ({
     }
     
     if (personnelData.some(p => p.date === persDate && p.id !== editingPersId)) {
-       setValidationError(`Personnel data for ${persDate} already exists.`); return;
+       setValidationError(`Personnel data for ${formatDisplayDate(persDate)} already exists.`); return;
     }
     
     setIsSubmitting(true);
@@ -246,7 +246,7 @@ const AdminPanel: React.FC<Props> = ({
                       <div className="hidden sm:block bg-white dark:bg-slate-800 p-2 md:p-3 rounded-lg md:rounded-xl text-slate-400 dark:text-slate-500 shadow-sm border border-slate-100 dark:border-slate-700"><Fuel size={20} /></div>
                       <div>
                         <div className="font-black text-sm md:text-lg text-slate-800 dark:text-slate-100">{record.field}</div>
-                        <div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {record.date}</div>
+                        <div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {formatDisplayDate(record.date)}</div>
                         <div className="flex gap-2 mt-1">
                           <span className="text-[7px] bg-blue-500/10 text-blue-500 px-1 rounded">C: {record.condensate || 0}</span>
                           <span className="text-[7px] bg-amber-500/10 text-amber-500 px-1 rounded">W: {record.water || 0}</span>
@@ -270,7 +270,7 @@ const AdminPanel: React.FC<Props> = ({
                 <div key={record.id} className="flex items-center justify-between p-4 md:p-6 bg-slate-50 dark:bg-slate-900 rounded-xl md:rounded-2xl border border-slate-100 dark:border-slate-700/50 hover:border-amber-500/30 transition-all shadow-sm">
                    <div className="flex items-center gap-3 md:gap-6">
                      <div className="hidden sm:block bg-white dark:bg-slate-800 p-2 md:p-3 rounded-lg md:rounded-xl text-slate-400 dark:text-slate-500 shadow-sm border border-slate-100 dark:border-slate-700"><UserCheck size={20} /></div>
-                     <div><div className="font-black text-sm md:text-lg text-slate-800 dark:text-slate-100">Census</div><div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {record.date}</div></div>
+                     <div><div className="font-black text-sm md:text-lg text-slate-800 dark:text-slate-100">Census</div><div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {formatDisplayDate(record.date)}</div></div>
                    </div>
                    <div className="flex items-center gap-4 md:gap-10">
                      <div className="flex items-center gap-4 md:gap-6">

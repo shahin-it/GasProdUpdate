@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { ProductionRecord, PersonnelRecord } from '../types.ts';
-import { ORGANOGRAM } from '../constants.ts';
+import { ORGANOGRAM, formatDisplayDate } from '../constants.ts';
 import { FieldDistributionChart, HistoricalTrendChart, FieldComparisonBar } from './Charts.tsx';
 import ProductionTable from './ProductionTable.tsx';
 import { getAIInsights } from '../services/geminiService.ts';
@@ -141,7 +141,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
             <History size={16} className="md:w-5 md:h-5" />
             <div className="flex flex-col">
               <span className="font-black uppercase tracking-widest text-[8px] md:text-xs">Historical Archive View</span>
-              <span className="text-[7px] md:text-[9px] opacity-70 font-bold uppercase">{selectedDate} Records</span>
+              <span className="text-[7px] md:text-[9px] opacity-70 font-bold uppercase">{formatDisplayDate(selectedDate)} Records</span>
             </div>
           </>
         ) : (
@@ -149,7 +149,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
             <Zap size={16} className="md:w-5 md:h-5 animate-pulse" />
             <div className="flex flex-col">
               <span className="font-black uppercase tracking-widest text-[8px] md:text-xs">Live Operational Status</span>
-              <span className="text-[7px] md:text-[9px] opacity-70 font-bold uppercase">Streaming Latest Logs</span>
+              <span className="text-[7px] md:text-[9px] opacity-70 font-bold uppercase">Streaming Logs for {formatDisplayDate(selectedDate)}</span>
             </div>
             <span className="ml-auto flex h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-emerald-500 animate-ping"></span>
           </>
@@ -216,7 +216,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
         <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-2 4k:col-span-2">
           <div className="flex items-center gap-3 mb-4">
             <LayoutList size={18} className="text-emerald-500" />
-            <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field-wise Operational Summary</h3>
+            <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field Operational Summary - {formatDisplayDate(selectedDate)}</h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 4k:grid-cols-6 gap-2 md:gap-4">
             {dayRecords.map((record) => (
@@ -301,7 +301,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
         <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-2">
            <div className="flex items-center gap-2 mb-4">
               <Sparkles size={16} className="text-purple-500" />
-              <h3 className="text-[10px] md:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Executive Intelligence</h3>
+              <h3 className="text-[10px] md:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Executive Intelligence - {formatDisplayDate(selectedDate)}</h3>
            </div>
            <div className={`text-xs md:text-sm 4k:text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium transition-opacity duration-700 ${loadingInsights ? 'opacity-40 animate-pulse' : 'opacity-100'}`}>{insights}</div>
         </div>

@@ -25,6 +25,16 @@ export const ALLOWED_ADMIN_IPS = [
   '180.211.179.202'
 ];
 
+/**
+ * Formats YYYY-MM-DD date string to DD-MM-YYYY
+ */
+export const formatDisplayDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+};
+
 export const INITIAL_MOCK_DATA: ProductionRecord[] = [
   { id: '1', field: 'তিতাস ফিল্ড', amount: 450, condensate: 25.5, water: 12.2, date: '2024-05-01' },
   { id: '2', field: 'হবিগঞ্জ ফিল্ড', amount: 320, condensate: 15.2, water: 8.4, date: '2024-05-01' },
