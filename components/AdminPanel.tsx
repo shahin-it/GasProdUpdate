@@ -137,12 +137,11 @@ const AdminPanel: React.FC<Props> = ({
           throw new Error("Invalid date format in cell S12.");
         }
 
-        // Apply -1 day offset: "add 1 day before cell date"
-        const finalDateObj = new Date(reportDate);
-        finalDateObj.setDate(finalDateObj.getDate() - 1);
-        const finalDateStr = finalDateObj.toISOString().split('T')[0];
+        // REVERTED: No longer applying -1 day offset. 
+        // We use the date from S12 exactly as it is.
+        const finalDateStr = reportDate.toISOString().split('T')[0];
 
-        // New Mapping coordinates provided by user
+        // Mapping coordinates confirmed by user
         const MAPPINGS = [
           { name: 'তিতাস ফিল্ড', gas: 'B43', cond: 'D16', water: 'D25' },
           { name: 'হবিগঞ্জ ফিল্ড', gas: 'G43', cond: 'I16', water: 'I25' },
@@ -290,7 +289,7 @@ const AdminPanel: React.FC<Props> = ({
                   </div>
                   <div>
                     <h4 className="text-[10px] md:text-xs font-black uppercase text-slate-700 dark:text-slate-200 tracking-widest">Excel Report Importer</h4>
-                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 (Date -1 Day) • Field Coordinates Mapped</p>
+                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 Date Source • Field Coordinates Mapped</p>
                   </div>
                   <button 
                     onClick={() => fileInputRef.current?.click()}
