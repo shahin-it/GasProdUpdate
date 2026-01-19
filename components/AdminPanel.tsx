@@ -337,7 +337,7 @@ const AdminPanel: React.FC<Props> = ({
                     <input type="number" step="0.01" value={condensate} onChange={(e) => setCondensate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
-                    <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Produced Water (BBL)</label>
+                    <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Water (BBL)</label>
                     <input type="number" step="0.01" value={water} onChange={(e) => setWater(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" />
                   </div>
                 </div>

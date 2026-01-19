@@ -207,7 +207,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl flex flex-col justify-center relative overflow-hidden group">
             <div className="flex items-center gap-2 mb-2">
               <Droplets size={16} className="text-amber-500" />
-              <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[8px] md:text-xs">Produced Water</span>
+              <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[8px] md:text-xs">Water</span>
             </div>
             <div className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{totalWater.toLocaleString()} <span className="text-[10px] font-bold text-slate-400 uppercase">BBL</span></div>
           </div>
