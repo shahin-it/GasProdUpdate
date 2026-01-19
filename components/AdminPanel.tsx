@@ -116,7 +116,7 @@ const AdminPanel: React.FC<Props> = ({
           return isNaN(parsed) ? 0 : parsed;
         };
 
-        // Date extraction from S12 with -1 day offset
+        // Date extraction from S12
         const rawDateValue = getCellValue('S12');
         if (!rawDateValue) {
           throw new Error("Date cell S12 is empty.");
@@ -137,18 +137,18 @@ const AdminPanel: React.FC<Props> = ({
           throw new Error("Invalid date format in cell S12.");
         }
 
-        // Apply -1 day offset as requested
+        // Apply -1 day offset: "add 1 day before cell date"
         const finalDateObj = new Date(reportDate);
-        finalDateObj.setDate(finalDateObj.getDate());
+        finalDateObj.setDate(finalDateObj.getDate() - 1);
         const finalDateStr = finalDateObj.toISOString().split('T')[0];
 
-        // Mapping coordinates provided by user
+        // New Mapping coordinates provided by user
         const MAPPINGS = [
           { name: 'তিতাস ফিল্ড', gas: 'B43', cond: 'D16', water: 'D25' },
-          { name: 'বাখরাবাদ ফিল্ড', gas: 'G43', cond: 'I16', water: 'I25' },
-          { name: 'নরসিংদী ফিল্ড', gas: 'L43', cond: 'N16', water: 'N25' },
-          { name: 'মেঘনা ফিল্ড', gas: 'O43', cond: 'Q16', water: 'Q25' },
-          { name: 'কামতা ফিল্ড', gas: 'S43', cond: 'U16', water: 'U25' },
+          { name: 'হবিগঞ্জ ফিল্ড', gas: 'G43', cond: 'I16', water: 'I25' },
+          { name: 'বাখরাবাদ ফিল্ড', gas: 'L43', cond: 'N16', water: 'N25' },
+          { name: 'নরসিংদী ফিল্ড', gas: 'O43', cond: 'Q16', water: 'Q25' },
+          { name: 'মেঘনা ফিল্ড', gas: 'S43', cond: 'U16', water: 'U25' },
         ];
 
         let importCount = 0;
@@ -290,7 +290,7 @@ const AdminPanel: React.FC<Props> = ({
                   </div>
                   <div>
                     <h4 className="text-[10px] md:text-xs font-black uppercase text-slate-700 dark:text-slate-200 tracking-widest">Excel Report Importer</h4>
-                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 (Date -1) • Specific Cell Mapping</p>
+                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 (Date -1 Day) • Field Coordinates Mapped</p>
                   </div>
                   <button 
                     onClick={() => fileInputRef.current?.click()}
