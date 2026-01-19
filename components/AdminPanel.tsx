@@ -1,11 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { FIELDS, ORGANOGRAM, formatDisplayDate } from '../constants.ts';
 import { ProductionRecord, PersonnelRecord } from '../types.ts';
+import * as XLSX from 'xlsx';
 import { 
   PlusCircle, Trash2, Database, AlertCircle, Loader2, XCircle, 
   Edit3, ChevronLeft, ChevronRight, Save, X, Users, Briefcase, LayoutGrid, UserCheck,
-  Fuel, Calendar, Droplets, FlaskConical, Target
+  Fuel, Calendar, Droplets, FlaskConical, Target, FileUp, CheckCircle2, FileSpreadsheet
 } from 'lucide-react';
 
 interface Props {
@@ -27,6 +28,7 @@ const AdminPanel: React.FC<Props> = ({
   onAddPersonnel, onUpdatePersonnel, onDeletePersonnel
 }) => {
   const [activeTab, setActiveTab] = useState<'production' | 'personnel'>('production');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Production Form State
   const [field, setField] = useState(FIELDS[0].name);
@@ -46,13 +48,16 @@ const AdminPanel: React.FC<Props> = ({
   
   // UI State
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleProductionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
+    setSuccessMsg(null);
     const numAmount = Number(amount);
     const numCond = Number(condensate || 0);
     const numWater = Number(water || 0);
@@ -78,12 +83,123 @@ const AdminPanel: React.FC<Props> = ({
       
       setAmount(''); setCondensate(''); setWater(''); 
       setEditingProdId(null);
+      setSuccessMsg(`Successfully saved ${field} log.`);
     } catch { setValidationError("Database error occurred."); } finally { setIsSubmitting(false); }
+  };
+
+  const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setValidationError(null);
+    setSuccessMsg(null);
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const data = evt.target?.result;
+        // Parse workbook with cellDates: true to handle Excel date objects properly
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        const getCellValue = (cellRef: string): any => {
+          const cell = sheet[cellRef];
+          return cell ? cell.v : null;
+        };
+
+        const getNumericValue = (cellRef: string): number => {
+          const val = getCellValue(cellRef);
+          if (typeof val === 'number') return val;
+          const parsed = parseFloat(val);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        // Date extraction from S12 with -1 day offset
+        const rawDateValue = getCellValue('S12');
+        if (!rawDateValue) {
+          throw new Error("Date cell S12 is empty.");
+        }
+
+        let reportDate: Date;
+        if (rawDateValue instanceof Date) {
+          reportDate = rawDateValue;
+        } else if (typeof rawDateValue === 'number') {
+          // Excel numeric date code to JS Date
+          reportDate = new Date((rawDateValue - 25569) * 86400 * 1000);
+        } else {
+          // Attempt to parse string
+          reportDate = new Date(rawDateValue);
+        }
+
+        if (isNaN(reportDate.getTime())) {
+          throw new Error("Invalid date format in cell S12.");
+        }
+
+        // Apply -1 day offset as requested
+        const finalDateObj = new Date(reportDate);
+        finalDateObj.setDate(finalDateObj.getDate() - 1);
+        const finalDateStr = finalDateObj.toISOString().split('T')[0];
+
+        // Mapping coordinates provided by user
+        const MAPPINGS = [
+          { name: 'তিতাস ফিল্ড', gas: 'B43', cond: 'D16', water: 'D25' },
+          { name: 'বাখরাবাদ ফিল্ড', gas: 'G43', cond: 'I16', water: 'I25' },
+          { name: 'নরসিংদী ফিল্ড', gas: 'L43', cond: 'N16', water: 'N25' },
+          { name: 'মেঘনা ফিল্ড', gas: 'O43', cond: 'Q16', water: 'Q25' },
+          { name: 'কামতা ফিল্ড', gas: 'S43', cond: 'U16', water: 'U25' },
+        ];
+
+        let importCount = 0;
+        let skipCount = 0;
+
+        for (const mapping of MAPPINGS) {
+          const gasValue = getNumericValue(mapping.gas);
+          
+          // Import if gas production is recorded
+          if (gasValue > 0) {
+            // Check for existing records to prevent duplicates on the same date
+            const exists = productionData.some(r => r.field === mapping.name && r.date === finalDateStr);
+            
+            if (!exists) {
+              await onAddProduction({
+                field: mapping.name,
+                amount: gasValue,
+                condensate: getNumericValue(mapping.cond),
+                water: getNumericValue(mapping.water),
+                date: finalDateStr
+              });
+              importCount++;
+            } else {
+              skipCount++;
+            }
+          }
+        }
+
+        if (importCount > 0) {
+          setSuccessMsg(`Import successful for ${formatDisplayDate(finalDateStr)}. Added ${importCount} records.${skipCount > 0 ? ` Skipped ${skipCount} existing entries.` : ''}`);
+        } else if (skipCount > 0) {
+          setValidationError(`All records for ${formatDisplayDate(finalDateStr)} already exist in the system.`);
+        } else {
+          setValidationError("No valid production data found in the mapped cells.");
+        }
+        
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } catch (err: any) {
+        console.error(err);
+        setValidationError(`Import failed: ${err.message || "Ensure the file matches the expected report format."}`);
+      } finally {
+        setIsImporting(false);
+      }
+    };
+    reader.readAsArrayBuffer(file);
   };
 
   const handlePersonnelSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
+    setSuccessMsg(null);
     const numOff = Number(officers);
     const numEmp = Number(employees);
     const numAppOff = Number(appOfficers);
@@ -112,6 +228,7 @@ const AdminPanel: React.FC<Props> = ({
       
       setOfficers(''); setEmployees(''); 
       setEditingPersId(null);
+      setSuccessMsg("Personnel census updated successfully.");
     } catch { setValidationError("Personnel database update failed."); } finally { setIsSubmitting(false); }
   };
 
@@ -121,7 +238,7 @@ const AdminPanel: React.FC<Props> = ({
     setCondensate(record.condensate?.toString() || '');
     setWater(record.water?.toString() || '');
     setProdDate(record.date);
-    setEditingProdId(record.id); setValidationError(null); setActiveTab('production');
+    setEditingProdId(record.id); setValidationError(null); setSuccessMsg(null); setActiveTab('production');
   };
 
   const startEditPers = (record: PersonnelRecord) => {
@@ -130,7 +247,7 @@ const AdminPanel: React.FC<Props> = ({
     setEmployees(record.employees.toString());
     setAppOfficers((record.approved_officers || ORGANOGRAM.OFFICERS).toString());
     setAppEmployees((record.approved_employees || ORGANOGRAM.EMPLOYEES).toString());
-    setEditingPersId(record.id); setValidationError(null); setActiveTab('personnel');
+    setEditingPersId(record.id); setValidationError(null); setSuccessMsg(null); setActiveTab('personnel');
   };
 
   const sortedProduction = useMemo(() => [...productionData].sort((a,b) => b.date.localeCompare(a.date)), [productionData]);
@@ -146,51 +263,88 @@ const AdminPanel: React.FC<Props> = ({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
       <div className="lg:col-span-1 space-y-6 md:space-y-8">
         <div className="flex bg-white dark:bg-slate-900 p-1 md:p-1.5 rounded-xl md:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <button onClick={() => { setActiveTab('production'); setValidationError(null); setCurrentPage(1); }} className={`flex-1 py-2 md:py-3 px-2 md:px-4 rounded-lg md:rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm transition-all ${activeTab === 'production' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}>
+          <button onClick={() => { setActiveTab('production'); setValidationError(null); setSuccessMsg(null); setCurrentPage(1); }} className={`flex-1 py-2 md:py-3 px-2 md:px-4 rounded-lg md:rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm transition-all ${activeTab === 'production' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}>
             <LayoutGrid size={16} /> Production
           </button>
-          <button onClick={() => { setActiveTab('personnel'); setValidationError(null); setCurrentPage(1); }} className={`flex-1 py-2 md:py-3 px-2 md:px-4 rounded-lg md:rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm transition-all ${activeTab === 'personnel' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}>
+          <button onClick={() => { setActiveTab('personnel'); setValidationError(null); setSuccessMsg(null); setCurrentPage(1); }} className={`flex-1 py-2 md:py-3 px-2 md:px-4 rounded-lg md:rounded-xl flex items-center justify-center gap-2 font-bold text-xs md:text-sm transition-all ${activeTab === 'personnel' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}>
             <UserCheck size={16} /> Personnel
           </button>
         </div>
 
+        {/* Tab Specific Panel */}
         <div className={`bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ${activeTab === 'personnel' ? 'ring-2 ring-amber-500/20' : 'ring-2 ring-emerald-500/20'}`}>
           <h2 className="text-xl md:text-2xl font-black mb-6 flex items-center gap-2 md:gap-3 text-slate-900 dark:text-white">
             {activeTab === 'production' ? <><Database className="text-emerald-500" size={20} /> Field Logging</> : <><Users className="text-amber-500" size={20} /> Census Update</>}
           </h2>
+
           {validationError && <div className="mb-6 p-3 md:p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400 text-[10px] md:text-sm font-bold"><XCircle size={16} /> {validationError}</div>}
+          {successMsg && <div className="mb-6 p-3 md:p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-3 text-emerald-600 dark:text-emerald-400 text-[10px] md:text-sm font-bold"><CheckCircle2 size={16} /> {successMsg}</div>}
           
           {activeTab === 'production' ? (
-            <form onSubmit={handleProductionSubmit} className="space-y-5 md:space-y-6">
-              <div>
-                <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Field Selection</label>
-                <select value={field} onChange={(e) => setField(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">
-                  {FIELDS.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
-                </select>
+            <div className="space-y-8">
+              {/* Excel Import Utility */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl group transition-all hover:border-emerald-500/50">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm text-emerald-600 dark:text-emerald-500 group-hover:scale-110 transition-transform">
+                    {isImporting ? <Loader2 className="animate-spin" size={20} /> : <FileSpreadsheet size={20} />}
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] md:text-xs font-black uppercase text-slate-700 dark:text-slate-200 tracking-widest">Excel Report Importer</h4>
+                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 (Date -1) • Specific Cell Mapping</p>
+                  </div>
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isImporting}
+                    className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-md disabled:opacity-50"
+                  >
+                    Select Excel File
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleFileImport}
+                    accept=".xlsx, .xls"
+                    className="hidden" 
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Gas (MCF)</label>
-                  <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-500" required />
-                </div>
-                <div>
-                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Log Date</label>
-                  <input type="date" value={prodDate} onChange={(e) => setProdDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required />
-                </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100 dark:border-slate-700"></div></div>
+                <div className="relative flex justify-center text-[8px] uppercase font-black text-slate-400 bg-white dark:bg-slate-800 px-2 tracking-widest">OR MANUAL ENTRY</div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <form onSubmit={handleProductionSubmit} className="space-y-5 md:space-y-6">
                 <div>
-                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Condensate (BBL)</label>
-                  <input type="number" step="0.01" value={condensate} onChange={(e) => setCondensate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500" />
+                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Field Selection</label>
+                  <select value={field} onChange={(e) => setField(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+                    {FIELDS.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                  </select>
                 </div>
-                <div>
-                  <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Produced Water (BBL)</label>
-                  <input type="number" step="0.01" value={water} onChange={(e) => setWater(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Gas (MCF)</label>
+                    <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-emerald-500" required />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Log Date</label>
+                    <input type="date" value={prodDate} onChange={(e) => setProdDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" required />
+                  </div>
                 </div>
-              </div>
-              <button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 md:py-5 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-xs md:text-sm shadow-xl flex items-center justify-center gap-3">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : editingProdId ? <Save size={16} /> : <PlusCircle size={16} />} {editingProdId ? "Apply Update" : "Push Log"}</button>
-              {editingProdId && <button type="button" onClick={() => setEditingProdId(null)} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
-            </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Condensate (BBL)</label>
+                    <input type="number" step="0.01" value={condensate} onChange={(e) => setCondensate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Produced Water (BBL)</label>
+                    <input type="number" step="0.01" value={water} onChange={(e) => setWater(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" />
+                  </div>
+                </div>
+                <button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-500 py-4 md:py-5 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-xs md:text-sm shadow-xl flex items-center justify-center gap-3">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : editingProdId ? <Save size={16} /> : <PlusCircle size={16} />} {editingProdId ? "Apply Update" : "Push Log"}</button>
+                {editingProdId && <button type="button" onClick={() => { setEditingProdId(null); setValidationError(null); setSuccessMsg(null); }} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
+              </form>
+            </div>
           ) : (
             <form onSubmit={handlePersonnelSubmit} className="space-y-5 md:space-y-6">
               <div>
@@ -225,7 +379,7 @@ const AdminPanel: React.FC<Props> = ({
               </div>
               
               <button type="submit" disabled={isSubmitting} className="w-full bg-amber-600 hover:bg-amber-500 py-4 md:py-5 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-xs md:text-sm shadow-xl flex items-center justify-center gap-3">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : editingPersId ? <Save size={16} /> : <UserCheck size={16} />} {editingPersId ? "Update Census" : "Submit Census"}</button>
-              {editingPersId && <button type="button" onClick={() => setEditingPersId(null)} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
+              {editingPersId && <button type="button" onClick={() => { setEditingPersId(null); setValidationError(null); setSuccessMsg(null); }} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
             </form>
           )}
         </div>
