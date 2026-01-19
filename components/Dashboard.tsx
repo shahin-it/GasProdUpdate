@@ -268,7 +268,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="text-xl md:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">{stats.total.toLocaleString()}</div>
-                  <div className={`text-[8px] font-black uppercase ${stats.totalDiff < 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                  <div className={`text-[10px] font-black uppercase ${stats.totalDiff < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                     Net {stats.totalDiff < 0 ? 'Shortage' : 'Surplus'}: {stats.totalDiff < 0 ? '' : '+'}{stats.totalDiff}
                   </div>
                 </div>
