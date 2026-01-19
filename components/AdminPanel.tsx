@@ -139,7 +139,7 @@ const AdminPanel: React.FC<Props> = ({
 
         // Apply -1 day offset as requested
         const finalDateObj = new Date(reportDate);
-        finalDateObj.setDate(finalDateObj.getDate() - 1);
+        finalDateObj.setDate(finalDateObj.getDate());
         const finalDateStr = finalDateObj.toISOString().split('T')[0];
 
         // Mapping coordinates provided by user
