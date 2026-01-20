@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       plugins: [react()],
       // Set publicDir to '.' to ensure root-level folders like 'static/' 
       // are included and served correctly in both dev and production.
-      publicDir: 'assets/',
+      publicDir: 'static/',
       define: {
         // Map common API key names to ensure compatibility with various .env setups
         'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GEMINI_API_KEY || ''),
