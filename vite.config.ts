@@ -8,7 +8,7 @@ const __dirname = path.resolve();
 
 export default defineConfig(({ mode }) => {
     // Load env file based on `mode` in the current working directory.
-    // Set the third parameter to '' to load all env vars regardless of the `VITE_` prefix.
+    // Loads all variables regardless of the VITE_ prefix.
     const env = loadEnv(mode, process.cwd(), '');
     
     return {
@@ -18,12 +18,15 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
+      // Set publicDir to '.' to ensure root-level folders like 'static/' 
+      // are included and served correctly in both dev and production.
+      publicDir: '.', 
       define: {
-        // Ensure API_KEY is mapped from either API_KEY or GEMINI_API_KEY in .env files
-        'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY),
-        'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL),
-        'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY)
+        // Map common API key names to ensure compatibility with various .env setups
+        'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GEMINI_API_KEY || ''),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY || ''),
+        'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || ''),
+        'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || '')
       },
       resolve: {
         alias: {
@@ -33,6 +36,7 @@ export default defineConfig(({ mode }) => {
       build: {
         target: 'esnext',
         outDir: 'dist',
+        emptyOutDir: true,
       }
     };
 });
