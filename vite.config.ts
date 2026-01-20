@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
         target: 'esnext',
         outDir: 'dist',
         emptyOutDir: true,
+        copyPublicDir: true,
       }
     };
 });
