@@ -20,7 +20,7 @@ interface Props {
   onDeletePersonnel: (id: string) => Promise<void>;
 }
 
-const RECORDS_PER_PAGE = 8;
+const RECORDS_PER_PAGE = 10;
 
 const AdminPanel: React.FC<Props> = ({ 
   productionData, personnelData,
@@ -99,7 +99,6 @@ const AdminPanel: React.FC<Props> = ({
     reader.onload = async (evt) => {
       try {
         const data = evt.target?.result;
-        // Parse workbook with cellDates: true to handle Excel date objects properly
         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
@@ -116,7 +115,6 @@ const AdminPanel: React.FC<Props> = ({
           return isNaN(parsed) ? 0 : parsed;
         };
 
-        // Date extraction from S12
         const rawDateValue = getCellValue('S12');
         if (!rawDateValue) {
           throw new Error("Date cell S12 is empty.");
@@ -126,10 +124,8 @@ const AdminPanel: React.FC<Props> = ({
         if (rawDateValue instanceof Date) {
           reportDate = rawDateValue;
         } else if (typeof rawDateValue === 'number') {
-          // Excel numeric date code to JS Date
           reportDate = new Date((rawDateValue - 25569) * 86400 * 1000);
         } else {
-          // Attempt to parse string
           reportDate = new Date(rawDateValue);
         }
 
@@ -137,11 +133,8 @@ const AdminPanel: React.FC<Props> = ({
           throw new Error("Invalid date format in cell S12.");
         }
 
-        // REVERTED: No longer applying -1 day offset. 
-        // We use the date from S12 exactly as it is.
         const finalDateStr = reportDate.toISOString().split('T')[0];
 
-        // Mapping coordinates confirmed by user
         const MAPPINGS = [
           { name: 'তিতাস ফিল্ড', gas: 'B43', cond: 'D16', water: 'D25' },
           { name: 'হবিগঞ্জ ফিল্ড', gas: 'G43', cond: 'I16', water: 'I25' },
@@ -155,12 +148,8 @@ const AdminPanel: React.FC<Props> = ({
 
         for (const mapping of MAPPINGS) {
           const gasValue = getNumericValue(mapping.gas);
-          
-          // Import if gas production is recorded
           if (gasValue > 0) {
-            // Check for existing records to prevent duplicates on the same date
             const exists = productionData.some(r => r.field === mapping.name && r.date === finalDateStr);
-            
             if (!exists) {
               await onAddProduction({
                 field: mapping.name,
@@ -179,15 +168,14 @@ const AdminPanel: React.FC<Props> = ({
         if (importCount > 0) {
           setSuccessMsg(`Import successful for ${formatDisplayDate(finalDateStr)}. Added ${importCount} records.${skipCount > 0 ? ` Skipped ${skipCount} existing entries.` : ''}`);
         } else if (skipCount > 0) {
-          setValidationError(`All records for ${formatDisplayDate(finalDateStr)} already exist in the system.`);
+          setValidationError(`All records for ${formatDisplayDate(finalDateStr)} already exist.`);
         } else {
           setValidationError("No valid production data found in the mapped cells.");
         }
         
         if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (err: any) {
-        console.error(err);
-        setValidationError(`Import failed: ${err.message || "Ensure the file matches the expected report format."}`);
+        setValidationError(`Import failed: ${err.message}`);
       } finally {
         setIsImporting(false);
       }
@@ -249,8 +237,17 @@ const AdminPanel: React.FC<Props> = ({
     setEditingPersId(record.id); setValidationError(null); setSuccessMsg(null); setActiveTab('personnel');
   };
 
-  const sortedProduction = useMemo(() => [...productionData].sort((a,b) => b.date.localeCompare(a.date)), [productionData]);
-  const sortedPersonnel = useMemo(() => [...personnelData].sort((a,b) => b.date.localeCompare(a.date)), [personnelData]);
+  const sortedProduction = useMemo(() => {
+    return [...productionData].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      return a.field.localeCompare(b.field);
+    });
+  }, [productionData]);
+
+  const sortedPersonnel = useMemo(() => {
+    return [...personnelData].sort((a, b) => b.date.localeCompare(a.date));
+  }, [personnelData]);
 
   const pagedData = activeTab === 'production' 
     ? sortedProduction.slice((currentPage-1)*RECORDS_PER_PAGE, currentPage*RECORDS_PER_PAGE)
@@ -270,7 +267,6 @@ const AdminPanel: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* Tab Specific Panel */}
         <div className={`bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl transition-all duration-300 ${activeTab === 'personnel' ? 'ring-2 ring-amber-500/20' : 'ring-2 ring-emerald-500/20'}`}>
           <h2 className="text-xl md:text-2xl font-black mb-6 flex items-center gap-2 md:gap-3 text-slate-900 dark:text-white">
             {activeTab === 'production' ? <><Database className="text-emerald-500" size={20} /> Field Logging</> : <><Users className="text-amber-500" size={20} /> Census Update</>}
@@ -281,7 +277,6 @@ const AdminPanel: React.FC<Props> = ({
           
           {activeTab === 'production' ? (
             <div className="space-y-8">
-              {/* Excel Import Utility */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl group transition-all hover:border-emerald-500/50">
                 <div className="flex flex-col items-center text-center gap-3">
                   <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm text-emerald-600 dark:text-emerald-500 group-hover:scale-110 transition-transform">
@@ -289,22 +284,10 @@ const AdminPanel: React.FC<Props> = ({
                   </div>
                   <div>
                     <h4 className="text-[10px] md:text-xs font-black uppercase text-slate-700 dark:text-slate-200 tracking-widest">Excel Report Importer</h4>
-                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 Date Source • Field Coordinates Mapped</p>
+                    <p className="text-[8px] md:text-[10px] text-slate-400 font-bold mt-1">S12 Date Source • Auto Mapping</p>
                   </div>
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isImporting}
-                    className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-md disabled:opacity-50"
-                  >
-                    Select Excel File
-                  </button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    onChange={handleFileImport}
-                    accept=".xlsx, .xls"
-                    className="hidden" 
-                  />
+                  <button onClick={() => fileInputRef.current?.click()} disabled={isImporting} className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-md disabled:opacity-50">Select Excel File</button>
+                  <input type="file" ref={fileInputRef} onChange={handleFileImport} accept=".xlsx, .xls" className="hidden" />
                 </div>
               </div>
 
@@ -350,7 +333,6 @@ const AdminPanel: React.FC<Props> = ({
                 <label className="block text-[8px] md:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Census Date</label>
                 <input type="date" value={persDate} onChange={(e) => setPersDate(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg md:rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold outline-none focus:ring-2 focus:ring-amber-500" required />
               </div>
-              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
                   <span className="block text-[8px] font-black text-emerald-500 uppercase tracking-widest">Present Strength</span>
@@ -363,7 +345,6 @@ const AdminPanel: React.FC<Props> = ({
                     <input type="number" value={employees} onChange={(e) => setEmployees(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-xs md:text-sm font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500" required />
                   </div>
                 </div>
-                
                 <div className="space-y-4">
                   <span className="block text-[8px] font-black text-blue-500 uppercase tracking-widest">Approved (Organogram)</span>
                   <div>
@@ -376,7 +357,6 @@ const AdminPanel: React.FC<Props> = ({
                   </div>
                 </div>
               </div>
-              
               <button type="submit" disabled={isSubmitting} className="w-full bg-amber-600 hover:bg-amber-500 py-4 md:py-5 rounded-xl md:rounded-2xl text-white font-black uppercase tracking-widest text-xs md:text-sm shadow-xl flex items-center justify-center gap-3">{isSubmitting ? <Loader2 className="animate-spin" size={16} /> : editingPersId ? <Save size={16} /> : <UserCheck size={16} />} {editingPersId ? "Update Census" : "Submit Census"}</button>
               {editingPersId && <button type="button" onClick={() => { setEditingPersId(null); setValidationError(null); setSuccessMsg(null); }} className="w-full py-3 text-slate-500 font-bold uppercase text-[10px] tracking-widest border border-slate-200 rounded-xl">Cancel</button>}
             </form>
@@ -391,6 +371,15 @@ const AdminPanel: React.FC<Props> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest self-start">PAGE {currentPage} / {totalPages || 1}</div>
           </div>
 
+          {/* Top Pagination Controls */}
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-100 dark:border-slate-700/50">
+            <div className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">Page {currentPage} of {totalPages || 1}</div>
+            <div className="flex gap-2">
+              <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 rounded-lg text-slate-500 disabled:opacity-20 transition-all hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronLeft size={16} /></button>
+              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 rounded-lg text-slate-500 disabled:opacity-20 transition-all hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronRight size={16} /></button>
+            </div>
+          </div>
+
           <div className="flex-1 space-y-3 md:space-y-4">
             {activeTab === 'production' ? (
                (pagedData as ProductionRecord[]).map(record => (
@@ -400,9 +389,9 @@ const AdminPanel: React.FC<Props> = ({
                       <div>
                         <div className="font-black text-sm md:text-lg text-slate-800 dark:text-slate-100">{record.field}</div>
                         <div className="text-[8px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1"><Calendar size={10} /> {formatDisplayDate(record.date)}</div>
-                        <div className="flex gap-2 mt-1">
-                          <span className="text-[7px] bg-blue-500/10 text-blue-500 px-1 rounded">C: {record.condensate || 0}</span>
-                          <span className="text-[7px] bg-amber-500/10 text-amber-500 px-1 rounded">W: {record.water || 0}</span>
+                        <div className="flex gap-2 mt-2">
+                          <span className="text-[12px] md:text-sm font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">C: {record.condensate || 0}</span>
+                          <span className="text-[12px] md:text-sm font-bold bg-amber-500/10 text-amber-600 dark:text-amber-500 px-2 py-0.5 rounded">W: {record.water || 0}</span>
                         </div>
                       </div>
                     </div>
