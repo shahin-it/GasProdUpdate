@@ -109,7 +109,7 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`p-1.5 rounded-lg ${color}`}>{icon}</div>
-            <span className="text-slate-600 dark:text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-tight">{label}</span>
+            <span className="text-slate-600 dark:text-slate-400 font-bold text-[14px] md:text-md uppercase tracking-tight">{label}</span>
           </div>
           <div className="flex items-center gap-1.5">
              <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{actual.toLocaleString()}</span>
@@ -213,39 +213,6 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-2 4k:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <LayoutList size={18} className="text-emerald-500" />
-            <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field Operational Summary - {formatDisplayDate(selectedDate)}</h3>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 4k:grid-cols-6 gap-2 md:gap-4">
-            {dayRecords.map((record) => (
-                <div key={record.field} className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/30 transition-all flex flex-col">
-                  <div className="text-slate-400 dark:text-slate-500 font-black text-[14px] md:text-[16px] uppercase tracking-widest mb-2 truncate">{record.field}</div>
-                  <div className="space-y-1">
-                    <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl font-mono">{record.amount.toLocaleString()} <span className="text-[8px] text-slate-400 uppercase font-sans">MCF</span></div>
-                    <div className="flex justify-between items-center text-[12px] md:text-[13px] font-bold">
-                      <span className="text-blue-500 uppercase tracking-tighter">Cond:</span>
-                      <span className="text-slate-700 dark:text-slate-300  font-mono">{record.condensate?.toLocaleString() || 0} BBL</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[12px] md:text-[13px] font-bold">
-                      <span className="text-amber-500 uppercase tracking-tighter">Water:</span>
-                      <span className="text-slate-700 dark:text-slate-300 font-mono">{record.water?.toLocaleString() || 0} BBL</span>
-                    </div>
-                  </div>
-                </div>
-            ))}
-          </div>
-          {dayRecords.length === 0 && <div className="text-slate-400 dark:text-slate-500 text-center py-10 font-bold uppercase tracking-widest border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">No data found</div>}
-        </div>
-      </div>
-
-      {/* Row 2: Breakdown (Larger)| Benchmarking */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-6 gap-4 md:gap-6">
-        <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-1 4k:col-span-2">
-          <FieldDistributionChart data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
-        </div>
-
         {/* Workforce Card - Benchmarked against Dynamic Organogram from DB */}
         <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm flex flex-col justify-between relative overflow-hidden xl:col-span-1 4k:col-span-1">
           <div>
@@ -277,7 +244,41 @@ const Dashboard: React.FC<Props> = ({ productionData, personnelData, selectedDat
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-2 4k:col-span-2">
+        <div className="bg-white dark:bg-slate-800/80 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl xl:col-span-1 4k:col-span-2">
+          <FieldDistributionChart data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode}/>
+        </div>
+
+      </div>
+
+      {/* Row 2: Breakdown (Larger)| Benchmarking */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 4k:grid-cols-6 gap-4 md:gap-6">
+        <div className="bg-white dark:bg-slate-900/60 p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl backdrop-blur-sm xl:col-span-3 4k:col-span-3">
+          <div className="flex items-center gap-3 mb-4">
+            <LayoutList size={18} className="text-emerald-500" />
+            <h3 className="text-[10px] md:text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Field Operational Summary - {formatDisplayDate(selectedDate)}</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 4k:grid-cols-6 gap-2 md:gap-4">
+            {dayRecords.map((record) => (
+                <div key={record.field} className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/30 transition-all flex flex-col">
+                  <div className="text-slate-400 dark:text-slate-500 font-black text-[18px] md:text-[20px] uppercase tracking-widest mb-2 truncate">{record.field}</div>
+                  <div className="space-y-1">
+                    <div className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-xl font-mono">{record.amount.toLocaleString()} <span className="text-[14px] text-slate-400 uppercase font-sans">MCF</span></div>
+                    <div className="flex justify-between items-center text-[16px] md:text-[17px] font-bold">
+                      <span className="text-blue-500 uppercase tracking-tighter">Cond:</span>
+                      <span className="text-slate-700 dark:text-slate-300  font-mono">{record.condensate?.toLocaleString() || 0} BBL</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[16px] md:text-[17px] font-bold">
+                      <span className="text-amber-500 uppercase tracking-tighter">Water:</span>
+                      <span className="text-slate-700 dark:text-slate-300 font-mono">{record.water?.toLocaleString() || 0} BBL</span>
+                    </div>
+                  </div>
+                </div>
+            ))}
+          </div>
+          {dayRecords.length === 0 && <div className="text-slate-400 dark:text-slate-500 text-center py-10 font-bold uppercase tracking-widest border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">No data found</div>}
+        </div>
+
+        <div className="bg-white dark:bg-slate-800/50 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg xl:col-span-1 4k:col-span-1">
           <FieldComparisonBar data={productionData} targetDate={selectedDate} isDarkMode={isDarkMode} />
         </div>
       </div>

@@ -246,12 +246,12 @@ const App: React.FC = () => {
                 <ChevronLeft size={18} />
               </button>
               
-              <div className="flex items-center gap-1 md:gap-2 px-1 md:px-3 text-slate-700 dark:text-white font-black text-[10px] md:text-sm border-x border-slate-200 dark:border-slate-700 group">
+              <div className="flex items-center gap-1 md:gap-2 px-1 md:px-3 text-red-600 dark:text-red-500 font-black text-sm md:text-lg border-x border-slate-200 dark:border-slate-700 group">
                 <input 
                   type="date" 
                   value={selectedDate} 
                   onChange={(e) => setSelectedDate(e.target.value)} 
-                  className="bg-transparent border-none focus:ring-0 outline-none p-0 w-24 md:w-32 cursor-pointer dark:color-scheme-dark" 
+                  className="bg-transparent border-none focus:ring-0 outline-none p-0 w-28 md:w-40 cursor-pointer dark:color-scheme-dark" 
                 />
               </div>
 
