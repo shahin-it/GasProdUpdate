@@ -4,7 +4,13 @@ import { ProductionRecord, PersonnelRecord } from '../types.ts';
 
 // Robust environment variable resolution
 const getEnv = (key: string): string => {
-  return (process.env as any)?.[key] || (window as any).process?.env?.[key] || '';
+  return (
+    (process.env as any)?.[key] || 
+    (import.meta as any).env?.[key] || 
+    (import.meta as any).env?.[`VITE_${key}`] ||
+    (window as any).process?.env?.[key] || 
+    ''
+  );
 };
 
 const supabaseUrl = getEnv('SUPABASE_URL');

@@ -2,8 +2,18 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ProductionRecord } from "../types.ts";
 
+const getEnv = (key: string): string => {
+  return (
+    (process.env as any)?.[key] || 
+    (import.meta as any).env?.[key] || 
+    (import.meta as any).env?.[`VITE_${key}`] ||
+    (window as any).process?.env?.[key] || 
+    ''
+  );
+};
+
 export const getAIInsights = async (data: ProductionRecord[], targetDate: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: getEnv('API_KEY') || getEnv('GEMINI_API_KEY') });
   
   // Provide specific data for the target date and a small historical context
   const targetDayData = data.filter(r => r.date === targetDate);

@@ -24,11 +24,12 @@ export default defineConfig(({ mode }) => {
       // are included and served correctly in both dev and production.
       publicDir: 'static/',
       define: {
-        // Map common API key names to ensure compatibility with various .env setups
-        'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GEMINI_API_KEY || ''),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY || ''),
-        'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || ''),
-        'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || '')
+        'process.env': JSON.stringify({
+          API_KEY: env.API_KEY || env.GEMINI_API_KEY || env.VITE_API_KEY || env.VITE_GEMINI_API_KEY || '',
+          GEMINI_API_KEY: env.GEMINI_API_KEY || env.API_KEY || env.VITE_GEMINI_API_KEY || env.VITE_API_KEY || '',
+          SUPABASE_URL: env.SUPABASE_URL || env.VITE_SUPABASE_URL || '',
+          SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || ''
+        })
       },
       resolve: {
         alias: {

@@ -116,6 +116,14 @@ const App: React.FC = () => {
   }, [dbStatus]);
 
   useEffect(() => {
+    // Environment Diagnostics
+    console.group('🚀 Environment Check');
+    console.log('API_KEY present:', !!process.env.API_KEY);
+    console.log('SUPABASE_URL present:', !!process.env.SUPABASE_URL);
+    console.log('SUPABASE_ANON_KEY present:', !!process.env.SUPABASE_ANON_KEY);
+    console.log('DB Configured:', dbService.isConfigured());
+    console.groupEnd();
+
     const initialize = async () => {
       setIsLoading(true);
       await fetchData();
