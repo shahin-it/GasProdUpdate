@@ -12,10 +12,12 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
     
     return {
+      base: './',
       server: {
         port: 3000,
         strictPort: mode === 'development',
         host: '0.0.0.0',
+        allowedHosts: ['gas']
       },
       plugins: [react()],
       // Set publicDir to '.' to ensure root-level folders like 'static/' 
