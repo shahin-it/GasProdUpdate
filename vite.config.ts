@@ -8,8 +8,8 @@ const __dirname = path.resolve();
 
 export default defineConfig(({ mode }) => {
     // Load env file based on `mode` in the current working directory.
-    // Loads all variables regardless of the VITE_ prefix.
-    const env = loadEnv(mode, process.cwd(), '');
+    // Loads all variables from .env files and merges them with system environment variables.
+    const env = { ...process.env, ...loadEnv(mode, process.cwd(), '') };
     
     return {
       base: './',
